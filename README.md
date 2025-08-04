@@ -1,8 +1,8 @@
 # RWDD-Assignment
 
-HTML
-CSS 
-JavaScript 
-PHP 
-SQL 
-XAMPP 
+HTML <br>
+CSS  <br>
+JavaScript  <br>
+PHP <br>
+SQL <br>
+XAMPP <br>
