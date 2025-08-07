@@ -34,4 +34,4 @@
 │   └── database.sql            ← Exported MySQL database
 │
 ├── README.md                   ← This file
-└── .gitignore                  ← Files to ignore when pushing
+└── .gitignore                  ← Files to ignore when pushing 
