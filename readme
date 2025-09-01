@@ -11,27 +11,31 @@
 
 ## 📁 Project Structure
 
-/RWDD-Assignment/
+📂 RWDD-Assignment/
+│── 📂 public/
+│   │── index.php              # Homepage (guest/user/admin sees diff content)
+│   │── login.php
+│   │── register.php
+│   │── profile.php
+│   │── events.php             # User: join/leave events, Admin: manage events
+│   │── trading.php            # User: trade items, Admin: monitor/flag trades
+│   │── communities.php        # User: post/comment, Admin: remove/report
+│   │── assets/
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── images/
+│   │── includes/
+│   │   ├── header.php         # Dynamic navbar
+│   │   └── footer.php
 │
-├── index.html                  ← Main homepage
-├── contact.php                 ← PHP page with form/database
-├── config.php                  ← Database connection file
+│── 📂 src/
+│   │── db.php                 # Database connection
+│   │── auth/                  # Login, register, logout
+│   │── trading/               # Trade logic (requests, history, approvals if admin)
+│   │── events/                # Event join/leave, admin moderation
+│   │── communities/           # Posts/comments, admin moderation
+│   │── notifications/         # QoL features (reminders, alerts)
+│   │── utils/                 # Shared helpers (validators, session checks)
 │
-├── /assets/
-│   ├── /css/
-│   │   ├── style.css           ← Global styles
-│   │   └── contact.css         ← (Optional) page-specific styles
-│   ├── /js/
-│   │   ├── main.js             ← Shared JS
-│   │   └── contact.js          ← (Optional) page-specific JS
-│   └── /images/                ← Image assets
-│
-├── /includes/
-│   ├── header.php              ← Shared header
-│   └── footer.php              ← Shared footer
-│
-├── /sql/
-│   └── database.sql            ← Exported MySQL database
-│
-├── README.md                   ← This file
-└── .gitignore                  ← Files to ignore when pushing
+│── README.md
+│── .gitignore
