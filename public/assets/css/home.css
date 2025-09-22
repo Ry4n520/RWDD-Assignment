@@ -138,3 +138,40 @@ nav a.accent-link{
     margin-right: unset;
   }
 }
+
+/* === HOMEPAGE CONTENT LAYOUT === */
+
+.homepage {
+  padding: 2rem;
+}
+
+/* Large top content box */
+.main-content {
+  background: #fff;
+  color: #111;
+  padding: 2rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Row with 3 boxes */
+.content-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.content-box {
+  background: #fff;
+  color: #111;
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.content-box:hover {
+  transform: translateY(-5px);
+}
