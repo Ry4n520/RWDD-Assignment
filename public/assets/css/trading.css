@@ -1,0 +1,55 @@
+.trading-page {
+  padding: 2em;
+  color: var(--text-color);
+}
+
+.trading-page h1 {
+  margin-bottom: 1em;
+}
+
+.trading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5em;
+}
+
+.trading-card {
+  background-color: var(--hover-color);
+  padding: 1em;
+  border-radius: 10px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.trading-card:hover {
+  transform: scale(1.03);
+}
+
+.trading-card img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 0.8em;
+}
+
+.trading-card h2 {
+  font-size: 1.2em;
+  margin-bottom: 0.5em;
+}
+
+.trading-card p {
+  margin-bottom: 1em;
+}
+
+.request-btn {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 0.6em 1.2em;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.request-btn:hover {
+  background-color: #0055cc;
+}
