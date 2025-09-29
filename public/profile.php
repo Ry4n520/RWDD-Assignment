@@ -1,3 +1,6 @@
+<?php /* include '../src/auth.php';  */?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,7 +24,7 @@
     <!-- Profile Info -->
     <section class="profile-header">
       <div class="profile-picture">
-        <img src="assets/images/default-avatar.png" alt="Profile Picture">
+        <img src="assets/images/default-profile.jpg" alt="Profile Picture">
         <button class="edit-btn">Edit</button>
       </div>
       <div class="profile-details">
