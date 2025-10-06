@@ -1,55 +1,131 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.trading-popup-content #trading-popup-action-btn {
+  display: none;
+}
 .trading-page {
-  padding: 2em;
-  color: var(--text-color);
+  padding: 20px;
 }
 
 .trading-page h1 {
-  margin-bottom: 1em;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.trading-page p {
+  margin-bottom: 20px;
+  color: #666;
 }
 
 .trading-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5em;
+  grid-template-columns: repeat(auto-fill, minmax(375px, 1fr));
+  gap: 20px;
 }
 
 .trading-card {
-  background-color: var(--hover-color);
-  padding: 1em;
+  background: #23233a;
+  color: #fff;
   border-radius: 10px;
-  text-align: center;
-  transition: transform 0.2s ease;
-}
-
-.trading-card:hover {
-  transform: scale(1.03);
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  border: 4px solid #29294a; /* Subtle border */
 }
 
 .trading-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
   max-width: 100%;
-  border-radius: 8px;
-  margin-bottom: 0.8em;
 }
 
-.trading-card h2 {
-  font-size: 1.2em;
+.trading-details {
+  padding: 15px;
+}
+
+.trading-details h2 {
+  font-size: 1.3rem;
   margin-bottom: 0.5em;
 }
 
-.trading-card p {
-  margin-bottom: 1em;
+.trading-details p {
+  margin: 4px 0;
 }
 
 .request-btn {
-  background-color: var(--accent-color);
-  color: white;
+  margin-top: 10px;
+  padding: 10px 15px;
+  background-color: #4cafef;
   border: none;
-  padding: 0.6em 1.2em;
   border-radius: 5px;
+  color: #fff;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 .request-btn:hover {
-  background-color: #0055cc;
+  background-color: #3498db;
+}
+
+/* Popup styles */
+.trading-popup {
+  /* Ensure overlay is fixed and centered even if other styles try to override */
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; /* JS sets display to flex on open */
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.trading-popup-content {
+  /* Modal card styling */
+  background: #fff !important;
+  color: #222;
+  border-radius: 10px;
+  padding: 50px 20px 20px 20px;
+  max-width: 700px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.trading-popup-content .popup-info {
+  text-align: left;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%; /* or your preferred width */
+}
+
+.trading-popup-content img {
+  width: 95%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+.trading-popup-close {
+  position: absolute;
+  top: 5px;
+  right: 14px;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+  font-weight: bold;
+}
+.trading-popup-close:hover {
+  color: #c04f87;
 }

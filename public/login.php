@@ -21,7 +21,7 @@ if (isset($_POST['signup'])) {
                       VALUES ('$newuser', '$newemail', '$newpass', NOW())";
 
         if (mysqli_query($conn, $insertSql)) {
-            $signup_success = "Account created! You can login now.";
+            $signup_success = "Account c  reated! You can login now.";
             $showSignup = false; // 👈 Back to login form
         } else {
             $signup_error = "Something went wrong.";
