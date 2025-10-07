@@ -9,13 +9,13 @@
   <title>Communities</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/navbar.css">
-  <link rel="stylesheet" href="assets/css/communities.css">
+  <link rel="stylesheet" href="assets/css/navbar.css?v=20251006">
+  <link rel="stylesheet" href="assets/css/communities.css?v=20251006">
 
   <!-- JS -->
-  <script src="assets/js/navbar.js" defer></script>
+  <script src="assets/js/navbar.js?v=20251006" defer></script>
 </head>
-<body>
+<body
   <!-- Navbar -->
   <?php include 'includes/header.php'; ?>
 

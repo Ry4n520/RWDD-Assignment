@@ -9,11 +9,11 @@
   <title>Profile</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/navbar.css">
-  <link rel="stylesheet" href="assets/css/profile.css">
+  <link rel="stylesheet" href="assets/css/navbar.css?v=20251006">
+  <link rel="stylesheet" href="assets/css/profile.css?v=20251006">
 
   <!-- JS -->
-  <script src="assets/js/navbar.js" defer></script>
+  <script src="assets/js/navbar.js?v=20251006" defer></script>
 </head>
 <body>
   <!-- Navbar -->

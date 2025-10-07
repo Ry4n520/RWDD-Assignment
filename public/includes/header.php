@@ -27,6 +27,14 @@ $current_page = basename($_SERVER['PHP_SELF']); // Get the current file name (e.
         <a href="home.php" class="<?= ($current_page == 'home.php') ? 'active-link' : '' ?>">Home</a>
       </li>
       <li>
+        <button id="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark theme">
+          <!-- moon icon -->
+          <svg class="icon-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <!-- sun icon -->
+          <svg class="icon-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.8 1.8-1.8zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 1.05l1.79-1.8-1.79-1.79-1.8 1.8 1.8 1.79zM20 11v2h3v-2h-3zM12 21h2v-3h-2v3zm4.24-2.76l1.8 1.79 1.79-1.79-1.79-1.8-1.8 1.8zM4.84 17.24l-1.8 1.79L4.84 20l1.8-1.79-1.8-1.8zM12 7a5 5 0 100 10 5 5 0 000-10z"/></svg>
+        </button>
+      </li>
+      <li>
         <a href="trading.php" class="<?= ($current_page == 'trading.php') ? 'active-link' : '' ?>">Trading</a>
       </li>
       <li>

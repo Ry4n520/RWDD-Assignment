@@ -1,4 +1,4 @@
-<?php/*  include '../src/auth.php';  */?>
+<?php /* include '../src/auth.php'; */?>
 
 <!DOCTYPE html>
 <html lang="en">

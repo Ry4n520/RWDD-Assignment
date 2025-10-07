@@ -5,6 +5,37 @@
   --accent-color: #0071FF;
   --text-color: #c9c9c9;
 }
+/* Light (bright) theme: applied by adding the "light" class to <body> */
+body.light {
+  --primary-color: #f5f7fb;
+  --hover-color: #e6eef8;
+  --accent-color: #0071FF;
+  --text-color: #111214;
+}
+
+/* Theme toggle button */
+#theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  padding: 0.5rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+#theme-toggle svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+/* show correct icon based on body.light */
+#theme-toggle .icon-sun { display: none; }
+body.light #theme-toggle .icon-sun { display: inline; }
+#theme-toggle .icon-moon { display: inline; }
+body.light #theme-toggle .icon-moon { display: none; }
+
 *{
   margin: 0;
   padding: 0;

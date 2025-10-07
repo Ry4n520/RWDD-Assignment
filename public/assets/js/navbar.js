@@ -27,3 +27,33 @@ function closeSidebar(){
 }
 
 updateNavbar(media)
+
+/* Theme toggle: bright (light) and dark modes */
+const themeToggle = document.getElementById('theme-toggle');
+function applyTheme(isLight){
+    if(isLight){
+        document.body.classList.add('light');
+    } else {
+        document.body.classList.remove('light');
+    }
+}
+
+// Initialize theme from localStorage or prefers-color-scheme
+try{
+    const stored = localStorage.getItem('theme');
+    if(stored){
+        applyTheme(stored === 'light');
+    } else {
+        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+        applyTheme(prefersLight);
+    }
+}catch(e){
+    // localStorage may be unavailable
+}
+
+if(themeToggle){
+    themeToggle.addEventListener('click', ()=>{
+        const isLight = document.body.classList.toggle('light');
+        try{ localStorage.setItem('theme', isLight ? 'light' : 'dark'); }catch(e){}
+    });
+}
