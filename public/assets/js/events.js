@@ -1,50 +1,41 @@
-// events-popup.js
-// Handles event card popup logic
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".event-card");
+  const popup = document.getElementById("event-popup");
+  const closeBtn = document.querySelector(".event-popup-close");
 
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.event-card').forEach((card) => {
-    card.style.cursor = 'pointer';
-    card.addEventListener('click', function (e) {
-      // Prevent button click from triggering popup
-      if (e.target.classList.contains('join-btn')) return;
-      const img = card.querySelector('img').src;
-      const title = card.querySelector('h2').textContent;
-      const [date, location] = Array.from(card.querySelectorAll('p')).map(
-        (p) => p.textContent
-      );
-      document.getElementById('popup-img').src = img;
-      document.getElementById('popup-title').textContent = title;
-      document.getElementById('popup-date').textContent = date;
-      document.getElementById('popup-location').textContent = location;
-      document.getElementById('event-popup').style.display = 'flex';
-      // Show the popup button when popup opens
-      var popupBtn = document.getElementById('popup-action-btn');
-      if (popupBtn) popupBtn.style.display = 'inline-block';
+  const popupImg = document.getElementById("event-popup-img");
+  const popupTitle = document.getElementById("event-popup-title");
+  const popupCommunity = document.getElementById("event-popup-community");
+  const popupOrganizer = document.getElementById("event-popup-organizer");
+  const popupAddress = document.getElementById("event-popup-address");
+  const popupDate = document.getElementById("event-popup-date");
+
+  // Make whole card clickable except join button
+  cards.forEach(card => {
+    card.addEventListener("click", (e) => {
+      if (e.target.classList.contains("join-btn")) {
+        // Stop popup if user clicked "Join Event"
+        return;
+      }
+
+      popupImg.src = card.dataset.img;
+      popupTitle.textContent = card.dataset.title;
+      popupCommunity.textContent = "Community: " + card.dataset.community;
+      popupOrganizer.textContent = "Organizer: " + card.dataset.organizer;
+      popupAddress.textContent = "Location: " + card.dataset.address;
+      popupDate.textContent = "Date: " + card.dataset.date;
+
+      popup.style.display = "flex";
     });
   });
-  // Close popup
-  document.querySelector('.event-popup-close').onclick = function () {
-    document.getElementById('event-popup').style.display = 'none';
-    // Hide the button again after closing
-    var popupBtn = document.getElementById('popup-action-btn');
-    if (popupBtn) popupBtn.style.display = 'none';
-  };
-  // Close popup when clicking outside content
-  document.getElementById('event-popup').onclick = function (e) {
-    if (e.target === this) {
-      this.style.display = 'none';
-      // Hide the button again after closing
-      var popupBtn = document.getElementById('popup-action-btn');
-      if (popupBtn) popupBtn.style.display = 'none';
-    }
-  };
 
-  // Popup button action
-  var popupBtn = document.getElementById('popup-action-btn');
-  if (popupBtn) {
-    popupBtn.onclick = function () {
-      alert('You have joined the event!');
-      document.getElementById('event-popup').style.display = 'none';
-    };
-  }
+  closeBtn.addEventListener("click", () => {
+    popup.style.display = "none";
+  });
+
+  popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+      popup.style.display = "none";
+    }
+  });
 });
