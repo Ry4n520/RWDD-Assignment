@@ -4,6 +4,97 @@
   margin: 0 auto;
 }
 
+/* Composer (top box styled like the screenshot) */
+.composer {
+  margin-bottom: 18px;
+}
+
+/* Layout: large avatar left, compact input + small Post button to the right */
+.composer-form {
+  display: flex;
+  gap: 18px;
+  align-items: center; /* vertically center input next to avatar */
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  /* brighter background + spacing to make the composer stand out */
+  background: linear-gradient(180deg, #ffffff, #f3f6fb);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Avatar: large square like your screenshot */
+.composer-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  background: #ffffff; /* brighter avatar background */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Input: compact single-line appearance (use textarea but forced height) */
+.composer-input {
+  width: 360px;
+  height: 32px; /* single-line height */
+  min-height: 32px;
+  max-height: 120px; /* allow expansion if user pastes long text */
+  padding: 6px 10px;
+  resize: vertical; /* allow vertical resize if user needs more space */
+  border-radius: 6px;
+  border: 1px solid #dfe7f5;
+  background: #ffffff;
+  color: #111;
+  font-size: 13px;
+  line-height: 1.1;
+  box-shadow: none;
+}
+
+/* Actions: place Post button below (or to the right) of the input area */
+.composer-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Small Post button */
+.composer-actions button {
+  padding: 6px 10px;
+  background: #ffffff;
+  color: #222;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Hover */
+.composer-actions button:hover {
+  background: #f5f5f5;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 900px) {
+  .composer-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .composer-avatar {
+    width: 140px;
+    height: 140px;
+  }
+  .composer-input {
+    width: 100%;
+    height: 38px;
+  }
+  .composer-actions {
+    margin-top: 8px;
+  }
+}
+
 h1 {
   font-size: 2rem;
   margin-bottom: 20px;
@@ -40,11 +131,12 @@ h1 {
 }
 
 .post {
-  background: #1e1e2f;
+  background: #252536; /* was #1e1e2f - now a bit lighter */
   color: #fff;
   padding: 15px;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .post-header {
@@ -70,6 +162,23 @@ h1 {
 }
 .post-actions button:hover {
   background: #444;
+}
+
+/* Make comment container hidden until toggled */
+.comments[aria-hidden='true'] {
+  display: none;
+}
+
+.post-actions .comment-toggle {
+  background: transparent;
+  border: none;
+  color: #c9c9c9;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.post-actions .comment-toggle:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .comments {

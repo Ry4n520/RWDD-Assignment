@@ -24,22 +24,34 @@
     <!-- Profile Info -->
     <section class="profile-header">
       <div class="profile-picture">
-        <img src="assets/images/default-profile.jpg" alt="Profile Picture">
-        <button class="edit-btn">Edit</button>
+        <div class="avatar-uploader">
+          <img id="profileAvatar" src="assets/images/default-profile.jpg" alt="Profile Picture">
+          <label for="avatarInput" class="avatar-edit" title="Change profile picture" aria-hidden="false">
+            <input id="avatarInput" name="avatar" type="file" accept="image/*" hidden />
+            <span class="edit-icon">✎</span>
+          </label>
+        </div>
       </div>
       <div class="profile-details">
-        <h2>Username <button class="edit-btn">Edit</button></h2>
+        <div class="profile-top">
+          <h2 id="profileName">Username</h2>
+          <button id="openEditProfile" class="edit-btn">Edit profile</button>
+        </div>
         <p class="bio">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
           Curabitur vel sem vel odio cursus feugiat.
-          <button class="edit-btn">Edit</button>
         </p>
         <div class="contact-info">
-          <p>Email: user@example.com <button class="edit-btn">Edit</button></p>
-          <p>Phone: +6012-3456789 <button class="edit-btn">Edit</button></p>
+          <p>Email: <span id="profileEmail">user@example.com</span></p>
+          <p>Phone: <span id="profilePhone">+6012-3456789</span></p>
         </div>
       </div>
     </section>
+
+    <!-- Logout button (placed between profile header and user activity) -->
+    <div class="logout-wrap">
+      <a href="login.php" class="logout-btn" role="button">Logout</a>
+    </div>
 
     <!-- User Activity -->
     <section class="user-activity">
@@ -68,5 +80,37 @@
       </div>
     </section>
   </main>
+  
+  <!-- Edit Profile Modal -->
+  <div id="editProfileModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="true"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
+      <h2 id="editProfileTitle">Edit Profile</h2>
+      <form id="editProfileForm">
+        <div class="field-group">
+          <label for="editUsername">Display name</label>
+          <input id="editUsername" name="username" type="text" />
+        </div>
+        <div class="field-group">
+          <label for="editBio">Bio</label>
+          <textarea id="editBio" name="bio" rows="4"></textarea>
+        </div>
+        <div class="field-group">
+          <label for="editEmail">Email</label>
+          <input id="editEmail" name="email" type="email" />
+        </div>
+        <div class="field-group">
+          <label for="editPhone">Phone</label>
+          <input id="editPhone" name="phone" type="tel" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn cancel" id="cancelEdit">Cancel</button>
+          <button type="submit" class="btn primary" id="saveEdit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/profile-edit.js" defer></script>
 </body>
 </html>
