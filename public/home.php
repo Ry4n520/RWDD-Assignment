@@ -8,13 +8,13 @@
   <title>Home Page</title>
 
   <!-- Navbar CSS -->
-  <link rel="stylesheet" href="assets/css/navbar.css?v=20251006">
+  <link rel="stylesheet" href="assets/css/navbar.css">
 
   <!-- Home Page CSS -->
   <link rel="stylesheet" href="assets/css/home.css">
 
   <!-- JS -->
-  <script src="assets/js/navbar.js?v=20251006" defer></script>
+  <script src="assets/js/navbar.js" defer></script>
 </head>
 <body>
 
