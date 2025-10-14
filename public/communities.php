@@ -1,4 +1,4 @@
-<?php /* include '../src/auth.php';  */?>
+<?php /* include '../src/auth.php'; */?>
 
 
 <!DOCTYPE html>
@@ -15,7 +15,7 @@
   <!-- JS -->
   <script src="assets/js/navbar.js?v=20251006" defer></script>
 </head>
-<body
+<body>
   <!-- Navbar -->
   <?php include 'includes/header.php'; ?>
 
