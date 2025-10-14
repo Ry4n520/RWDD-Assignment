@@ -1,5 +1,46 @@
-<?php /* include '../src/auth.php';  */?>
+<?php
+// load session and DB, then fetch current user to populate profile fields
+session_start();
+include __DIR__ . '/../src/db.php';
 
+$userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
+$user = [
+  'username' => 'Username',
+  'bio' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vel sem vel odio cursus feugiat.',
+  'email' => 'user@example.com',
+  'phone' => '+6012-3456789',
+  'profile_picture' => 'assets/images/default-profile.jpg'
+];
+
+if (isset($conn)) {
+  $row = null;
+  if ($userId) {
+    $stmt = mysqli_prepare($conn, "SELECT * FROM accounts WHERE UserID = ? LIMIT 1");
+    if ($stmt) {
+      mysqli_stmt_bind_param($stmt, 'i', $userId);
+      mysqli_stmt_execute($stmt);
+      $res = mysqli_stmt_get_result($stmt);
+      $row = $res ? mysqli_fetch_assoc($res) : null;
+      mysqli_stmt_close($stmt);
+    }
+  }
+  if (!$row) {
+    $res2 = mysqli_query($conn, "SELECT * FROM accounts LIMIT 1");
+    $row = $res2 ? mysqli_fetch_assoc($res2) : null;
+  }
+  if (!empty($row)) {
+    $user['username'] = $row['username'] ?? $row['user_name'] ?? $user['username'];
+    $user['bio'] = $row['bio'] ?? $row['about'] ?? $user['bio'];
+    $user['email'] = $row['email'] ?? $user['email'];
+    $user['phone'] = $row['phone'] ?? $row['contact'] ?? $user['phone'];
+    $pp = $row['profile_picture'] ?? $row['avatar'] ?? $row['picture'] ?? null;
+    if (!empty($pp)) {
+      $user['profile_picture'] = $pp;
+    }
+  }
+}
+
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -25,7 +66,7 @@
     <section class="profile-header">
       <div class="profile-picture">
         <div class="avatar-uploader">
-          <img id="profileAvatar" src="assets/images/default-profile.jpg" alt="Profile Picture">
+          <img id="profileAvatar" src="<?= htmlspecialchars($user['profile_picture']) ?>" alt="Profile Picture">
           <label for="avatarInput" class="avatar-edit" title="Change profile picture" aria-hidden="false">
             <input id="avatarInput" name="avatar" type="file" accept="image/*" hidden />
             <span class="edit-icon">✎</span>
@@ -34,16 +75,13 @@
       </div>
       <div class="profile-details">
         <div class="profile-top">
-          <h2 id="profileName">Username</h2>
+          <h2 id="profileName"><?= htmlspecialchars($user['username']) ?></h2>
           <button id="openEditProfile" class="edit-btn">Edit profile</button>
         </div>
-        <p class="bio">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-          Curabitur vel sem vel odio cursus feugiat.
-        </p>
+        <p class="bio"><?= nl2br(htmlspecialchars($user['bio'])) ?></p>
         <div class="contact-info">
-          <p>Email: <span id="profileEmail">user@example.com</span></p>
-          <p>Phone: <span id="profilePhone">+6012-3456789</span></p>
+          <p>Email: <span id="profileEmail"><?= htmlspecialchars($user['email']) ?></span></p>
+          <p>Phone: <span id="profilePhone"><?= htmlspecialchars($user['phone']) ?></span></p>
         </div>
       </div>
     </section>

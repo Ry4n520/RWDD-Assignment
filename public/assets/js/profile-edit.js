@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const res = await fetch('api/profile-avatar.php', {
           method: 'POST',
-          credentials: 'same-origin',
+          credentials: 'include',
           body: formData,
         });
         const json = await res.json();
@@ -69,6 +69,40 @@ document.addEventListener('DOMContentLoaded', () => {
     closeModal();
   });
 
+  // live-preview: as user types in the modal, update the profile preview immediately
+  const liveBind = () => {
+    const usernameIn = document.getElementById('editUsername');
+    const bioIn = document.getElementById('editBio');
+    const emailIn = document.getElementById('editEmail');
+    const phoneIn = document.getElementById('editPhone');
+
+    if (usernameIn)
+      usernameIn.addEventListener('input', (e) => {
+        const v = e.target.value.trim();
+        if (v.length) document.getElementById('profileName').textContent = v;
+      });
+    if (bioIn)
+      bioIn.addEventListener('input', (e) => {
+        const v = e.target.value;
+        document.querySelector('.bio').innerHTML = (v || '').replace(
+          /\n/g,
+          '<br>'
+        );
+      });
+    if (emailIn)
+      emailIn.addEventListener('input', (e) => {
+        const v = e.target.value.trim();
+        document.getElementById('profileEmail').textContent = v;
+      });
+    if (phoneIn)
+      phoneIn.addEventListener('input', (e) => {
+        const v = e.target.value.trim();
+        document.getElementById('profilePhone').textContent = v;
+      });
+  };
+
+  liveBind();
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     save.disabled = true;
@@ -83,23 +117,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('api/profile.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
+        credentials: 'include',
         body: JSON.stringify(data),
       });
-      const json = await res.json();
-      if (json.success) {
-        // update DOM values without a full reload
-        document.getElementById('profileName').textContent =
-          data.username || document.getElementById('profileName').textContent;
-        document.querySelector('.bio').textContent =
-          data.bio || document.querySelector('.bio').textContent;
-        document.getElementById('profileEmail').textContent =
-          data.email || document.getElementById('profileEmail').textContent;
-        document.getElementById('profilePhone').textContent =
-          data.phone || document.getElementById('profilePhone').textContent;
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success) {
+        // if backend returned updated user, use it to update DOM
+        const u = json.user || {};
+        if (u.username)
+          document.getElementById('profileName').textContent = u.username;
+        if (u.bio)
+          document.querySelector('.bio').innerHTML = (u.bio || '').replace(
+            /\n/g,
+            '<br>'
+          );
+        if (u.email)
+          document.getElementById('profileEmail').textContent = u.email;
+        if (u.phone)
+          document.getElementById('profilePhone').textContent = u.phone;
+        if (json.profile_picture)
+          document.getElementById('profileAvatar').src =
+            json.profile_picture + '?t=' + Date.now();
         closeModal();
       } else {
-        alert('Save failed: ' + (json.error || 'unknown'));
+        const msg = json?.error || 'HTTP ' + res.status;
+        alert('Save failed: ' + msg + (json?.detail ? '\n' + json.detail : ''));
       }
     } catch (err) {
       alert('Network error');
