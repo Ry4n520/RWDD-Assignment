@@ -1,15 +1,10 @@
 // communities.js - handles AJAX posting, comments fetch, comment posting, and likes
 
 async function apiFetch(path, opts = {}) {
+  // default options: keep same-origin cookies; caller may override headers/body
   const res = await fetch(
     path,
-    Object.assign(
-      {
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-      },
-      opts
-    )
+    Object.assign({ credentials: 'same-origin' }, opts)
   );
   let data = null;
   try {
@@ -38,54 +33,33 @@ async function apiFetch(path, opts = {}) {
   return data;
 }
 
-// Top composer submit
-const composerForm = document.querySelector('.composer-form');
-if (composerForm) {
-  async function submitComposer() {
-    const ta = composerForm.querySelector('.composer-input');
-    const content = ta.value.trim();
-    if (!content) return;
-    try {
-      const json = await apiFetch('api/posts.php', {
-        method: 'POST',
-        body: JSON.stringify({ content }),
-      });
-      if (json.success && json.post) {
-        // Prepend the new post to .posts
-        const postsEl = document.querySelector('.posts');
-        const html = buildPostHtml(json.post, 0);
-        postsEl.insertAdjacentHTML('afterbegin', html);
-        ta.value = '';
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Failed to post: ' + (err.message || err));
-    }
-  }
-
-  // bind button click
-  const postBtn = composerForm.querySelector('.composer-actions button');
-  if (postBtn) postBtn.addEventListener('click', submitComposer);
-  // also allow pressing Enter in the textarea to submit (Ctrl+Enter to allow newline)
-  const ta = composerForm.querySelector('.composer-input');
-  if (ta)
-    ta.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitComposer();
-    });
-}
+// Composer submit is handled in the DOMContentLoaded form submit handler below.
 
 // Build post HTML (server returns post with PostID, Content, Created_at, username)
 function buildPostHtml(post, commentCount) {
+  const imagesHtml = (post.images || [])
+    .map(
+      (src) =>
+        `<img src="${escapeHtml(src)}" class="post-image" alt="post image">`
+    )
+    .join('');
   return `
   <article class="post" data-postid="${post.PostID}">
     <div class="post-header">
-      <h2>${escapeHtml(post.username)}</h2>
-      <span class="time">${escapeHtml(post.Created_at)}</span>
+      ${
+        post.Title
+          ? `<h3 class="post-title">${escapeHtml(post.Title)}</h3>`
+          : ''
+      }
+      <div class="post-meta"><strong>${escapeHtml(
+        post.username
+      )}</strong> <span class="time">${escapeHtml(post.Created_at)}</span></div>
     </div>
-    <p class="post-content">${escapeHtml(post.Content).replace(
+    <p class="post-content">${escapeHtml(post.Content || '').replace(
       /\n/g,
       '<br>'
     )}</p>
+    <div class="post-images">${imagesHtml}</div>
     <div class="post-actions">
       <a class="like-btn" href="#" data-type="post" data-id="${
         post.PostID
@@ -207,4 +181,138 @@ function renderCommentsHtml(comments) {
         }">👍 0</a></div>`
     )
     .join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('postForm');
+  const title = document.getElementById('postTitle');
+  const content = document.getElementById('postContent');
+  const filesInput = document.getElementById('postFiles');
+  const preview = document.getElementById('filePreview');
+  const postButton = document.getElementById('postButton');
+
+  // remove preview/file handlers if you prefer they are hidden
+  filesInput?.addEventListener('change', () => {
+    preview.innerHTML = '';
+    const files = Array.from(filesInput.files || []);
+    if (!files.length) {
+      preview.setAttribute('aria-hidden', 'true');
+      return;
+    }
+    preview.removeAttribute('aria-hidden');
+    for (const f of files.slice(0, 6)) {
+      if (!f.type.startsWith('image/')) continue;
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      preview.appendChild(img);
+    }
+  });
+
+  // Prevent double submissions and ensure proper async flow
+  form?.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!postButton) return;
+
+    // prevent double-clicks/submissions
+    if (postButton.dataset.busy === '1') return;
+    postButton.dataset.busy = '1';
+    postButton.disabled = true;
+
+    const titleVal = title.value.trim();
+    const contentVal = content.value.trim();
+
+    // require both title and content
+    if (!titleVal || !contentVal) {
+      showMessage('Please add both a title and content.', 'error');
+      postButton.dataset.busy = '0';
+      postButton.disabled = false;
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('title', titleVal);
+    fd.append('content', contentVal);
+
+    const files = Array.from(filesInput.files || []);
+    if (files.length) {
+      for (const f of files) fd.append('images[]', f);
+    }
+
+    try {
+      const res = await fetch('api/posts.php', {
+        method: 'POST',
+        body: fd,
+        credentials: 'include',
+      });
+
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (e) {
+        alert('Save failed: HTTP ' + res.status + '\n' + text);
+        console.error('Unexpected non-json response from api/posts.php:', text);
+        return;
+      }
+
+      if (!json.success) {
+        showMessage('Save failed: ' + (json.error || 'unknown'), 'error');
+        console.error('API error response:', json);
+        return;
+      }
+
+      // render new post or reload if builder not present
+      if (typeof buildPostHtml === 'function') {
+        const postHtml = buildPostHtml(json.post, json.commentCount || 0);
+        const postsContainer = document.querySelector('.posts');
+        if (postsContainer) {
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = postHtml;
+          postsContainer.prepend(wrapper.firstElementChild);
+        }
+      } else {
+        location.reload();
+      }
+
+      // clear form
+      title.value = '';
+      content.value = '';
+      filesInput.value = '';
+      preview.innerHTML = '';
+      preview.setAttribute('aria-hidden', 'true');
+      showMessage('Post created', 'success');
+    } catch (err) {
+      console.error('Fetch error posting:', err);
+      showMessage(
+        'Failed to post: ' + (err.message || 'Network error'),
+        'error'
+      );
+    } finally {
+      postButton.dataset.busy = '0';
+      postButton.disabled = false;
+    }
+  });
+});
+
+// inline message helpers
+function showMessage(text, type = 'error') {
+  const el = document.getElementById('composerMessage');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('error', 'success');
+  el.classList.add(type === 'success' ? 'success' : 'error');
+  el.style.display = 'block';
+  el.setAttribute('aria-hidden', 'false');
+  // auto-hide after 5s for success messages
+  if (type === 'success') setTimeout(() => hideMessage(), 4000);
+}
+
+function hideMessage() {
+  const el = document.getElementById('composerMessage');
+  if (!el) return;
+  el.textContent = '';
+  el.classList.remove('error', 'success');
+  el.style.display = 'none';
+  el.setAttribute('aria-hidden', 'true');
 }

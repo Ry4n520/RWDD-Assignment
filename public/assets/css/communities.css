@@ -9,89 +9,149 @@
   margin-bottom: 18px;
 }
 
-/* Layout: large avatar left, compact input + small Post button to the right */
+/* Composer: vertical layout like Reddit */
 .composer-form {
   display: flex;
-  gap: 18px;
-  align-items: center; /* vertically center input next to avatar */
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  /* brighter background + spacing to make the composer stand out */
-  background: linear-gradient(180deg, #ffffff, #f3f6fb);
+  flex-direction: column;
+  gap: 12px;
   padding: 14px;
   border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #f3f6fb);
   border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* top row: avatar + fields */
+.composer-top {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
 }
 
 /* Avatar: large square like your screenshot */
 .composer-avatar {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 8px;
   object-fit: cover;
-  display: block;
-  background: #ffffff; /* brighter avatar background */
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* fields column */
+.composer-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+/* Title and file input styles */
+.composer-title {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #dfe7f5;
+  background: #fff;
+  font-size: 15px;
 }
 
 /* Input: compact single-line appearance (use textarea but forced height) */
 .composer-input {
-  width: 360px;
-  height: 32px; /* single-line height */
-  min-height: 32px;
-  max-height: 120px; /* allow expansion if user pastes long text */
-  padding: 6px 10px;
-  resize: vertical; /* allow vertical resize if user needs more space */
-  border-radius: 6px;
+  width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  border-radius: 8px;
   border: 1px solid #dfe7f5;
-  background: #ffffff;
+  background: #fff;
   color: #111;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.1;
+  resize: vertical; /* allow vertical resize if user needs more space */
   box-shadow: none;
 }
 
-/* Actions: place Post button below (or to the right) of the input area */
-.composer-actions {
+/* file row and actions aligned */
+.composer-file-row {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
 }
 
-/* Small Post button */
-.composer-actions button {
-  padding: 6px 10px;
-  background: #ffffff;
-  color: #222;
-  border: 1px solid #ddd;
+/* file input styling (kept simple) */
+.composer-files {
   border-radius: 6px;
-  cursor: pointer;
+  padding: 6px;
   font-size: 13px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
-/* Hover */
-.composer-actions button:hover {
-  background: #f5f5f5;
+/* Post button */
+#postButton {
+  padding: 8px 14px;
+  background: #0071ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+#postButton:hover {
+  background: #005fd6;
 }
 
-/* Responsive: stack on small screens */
+/* small inline preview thumbnails */
+.file-preview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.file-preview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Composer inline message */
+.composer-message {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: none;
+  font-size: 14px;
+}
+.composer-message.error {
+  background: #ffecec;
+  color: #8b0d0d;
+  border: 1px solid #f5c6c6;
+  display: block;
+}
+.composer-message.success {
+  background: #e9ffec;
+  color: #0b6f2b;
+  border: 1px solid #c6f5d1;
+  display: block;
+}
+
+/* temporarily hide images UI while you fix uploads */
+.composer-files,
+.file-preview {
+  display: none !important;
+}
+
+/* Responsive: keep layout comfortable on small screens */
 @media (max-width: 900px) {
-  .composer-form {
-    flex-direction: column;
+  .composer-top {
+    flex-direction: row;
+    gap: 12px;
     align-items: flex-start;
   }
   .composer-avatar {
-    width: 140px;
-    height: 140px;
+    width: 48px;
+    height: 48px;
   }
   .composer-input {
-    width: 100%;
-    height: 38px;
-  }
-  .composer-actions {
-    margin-top: 8px;
+    min-height: 120px;
   }
 }
 

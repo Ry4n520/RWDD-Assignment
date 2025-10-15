@@ -11,12 +11,63 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
     exit;
 }
-$input = json_decode(file_get_contents('php://input'), true);
-$content = trim($input['content'] ?? '');
-if ($content === '') {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Empty content']);
-    exit;
+
+// Support both JSON POST and multipart/form-data (with images[] and title)
+$content = '';
+$title = '';
+$uploadedFiles = [];
+if (isset($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false) {
+    // multipart: read from $_POST and $_FILES
+    $title = trim($_POST['title'] ?? '');
+    $content = trim($_POST['content'] ?? '');
+    if (!empty($_FILES['images'])) {
+        // normalize images[] to array
+        if (is_array($_FILES['images']['name'])) {
+            $count = count($_FILES['images']['name']);
+            for ($i = 0; $i < $count; $i++) {
+                if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
+                    $uploadedFiles[] = [
+                        'tmp_name' => $_FILES['images']['tmp_name'][$i],
+                        'name' => $_FILES['images']['name'][$i],
+                        'type' => $_FILES['images']['type'][$i],
+                    ];
+                }
+            }
+        } else {
+            if ($_FILES['images']['error'] === UPLOAD_ERR_OK) {
+                $uploadedFiles[] = [
+                    'tmp_name' => $_FILES['images']['tmp_name'],
+                    'name' => $_FILES['images']['name'],
+                    'type' => $_FILES['images']['type'],
+                ];
+            }
+        }
+    }
+} else {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $title = trim($input['title'] ?? '');
+    $content = trim($input['content'] ?? '');
+}
+
+// If Title column exists, require both title and content. Otherwise require content.
+$hasTitleColumn = false;
+$colResCheck = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'Title'");
+if ($colResCheck && mysqli_num_rows($colResCheck) > 0) {
+    $hasTitleColumn = true;
+}
+
+if ($hasTitleColumn) {
+    if ($title === '' || $content === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Title and content are required']);
+        exit;
+    }
+} else {
+    if ($content === '' && empty($uploadedFiles)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Empty content']);
+        exit;
+    }
 }
 
 // determine user id to use for the insert. If the session is anonymous, try to
@@ -49,8 +100,23 @@ if ($userId !== null) {
 }
 
 // prepared insert (always provide a UserID integer to avoid NOT NULL/ FK errors)
-$stmt = mysqli_prepare($conn, "INSERT INTO posts (UserID, Content) VALUES (?, ?)");
-mysqli_stmt_bind_param($stmt, 'is', $userIdParam, $content);
+// Insert post record (include Title column if it exists)
+$columns = ['UserID', 'Content'];
+$placeholders = ['?', '?'];
+$types = 'is';
+$values = [$userIdParam, $content];
+// detect if `Title` column exists in posts table
+$colRes = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'Title'");
+if ($colRes && mysqli_num_rows($colRes) > 0) {
+    $columns[] = 'Title';
+    $placeholders[] = '?';
+    $types .= 's';
+    $values[] = $title;
+}
+$sql = "INSERT INTO posts (" . implode(',', $columns) . ") VALUES (" . implode(',', $placeholders) . ")";
+$stmt = mysqli_prepare($conn, $sql);
+// bind params dynamically
+mysqli_stmt_bind_param($stmt, $types, ...$values);
 $ok = mysqli_stmt_execute($stmt);
 if (!$ok) {
     // try to detect FK error and retry with a fallback user id
@@ -83,12 +149,51 @@ if (!$ok) {
     exit;
 }
 $postId = mysqli_insert_id($conn);
-// fetch created post with username
-// fetch created post with username if available
-$stmt = mysqli_prepare($conn, "SELECT p.PostID, p.Content, p.Created_at, a.username, p.UserID FROM posts p LEFT JOIN accounts a ON p.UserID = a.UserID WHERE p.PostID = ? LIMIT 1");
+// If there are uploaded files, save them and optionally store references in post_images
+$savedImages = [];
+if (!empty($uploadedFiles)) {
+    $uploadDir = __DIR__ . '/../../public/uploads/posts';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    foreach ($uploadedFiles as $f) {
+        $ext = pathinfo($f['name'], PATHINFO_EXTENSION);
+        $safeName = 'post_' . $postId . '_' . time() . '_' . bin2hex(random_bytes(6)) . ($ext ? '.' . $ext : '');
+        $dest = $uploadDir . '/' . $safeName;
+        if (move_uploaded_file($f['tmp_name'], $dest)) {
+            // public path
+            $publicPath = '/uploads/posts/' . $safeName;
+            $savedImages[] = $publicPath;
+            // ensure post_images table exists and insert
+            $create = "CREATE TABLE IF NOT EXISTS post_images (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              PostID INT NOT NULL,
+              path VARCHAR(255) NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+            mysqli_query($conn, $create);
+            $ins = mysqli_prepare($conn, "INSERT INTO post_images (PostID, path) VALUES (?, ?)");
+            mysqli_stmt_bind_param($ins, 'is', $postId, $publicPath);
+            mysqli_stmt_execute($ins);
+        }
+    }
+}
+
+// fetch created post with username and aggregate images
+$stmt = mysqli_prepare($conn, "SELECT p.PostID, p.Content, p.Created_at, a.username, p.UserID" . (isset($values[2]) ? ", p.Title" : "") . " FROM posts p LEFT JOIN accounts a ON p.UserID = a.UserID WHERE p.PostID = ? LIMIT 1");
 mysqli_stmt_bind_param($stmt, 'i', $postId);
 mysqli_stmt_execute($stmt);
 $res = mysqli_stmt_get_result($stmt);
 $post = mysqli_fetch_assoc($res);
+// load images from post_images
+$imgRes = mysqli_prepare($conn, "SELECT path FROM post_images WHERE PostID = ? ORDER BY id ASC");
+mysqli_stmt_bind_param($imgRes, 'i', $postId);
+mysqli_stmt_execute($imgRes);
+$imgR = mysqli_stmt_get_result($imgRes);
+$images = [];
+while ($r = mysqli_fetch_assoc($imgR)) {
+    $images[] = $r['path'];
+}
+if (!empty($images)) {
+    $post['images'] = $images;
+}
 if ($post && empty($post['username'])) $post['username'] = 'Guest';
 echo json_encode(['success' => true, 'post' => $post]);
