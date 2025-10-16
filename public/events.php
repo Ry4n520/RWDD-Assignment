@@ -2,12 +2,9 @@
 session_start();
 include __DIR__ . '/../src/db.php';
 
-// Fetch events with community info
-$sql = "SELECT e.EventID, e.Name AS EventName, e.Address, e.Date, e.OrganizerID,
-               c.Name AS CommunityName
-        FROM events e
-        JOIN community c ON e.CommunityID = c.CommunityID
-        ORDER BY e.Date ASC";
+$sql = "SELECT e.EventID, e.Name AS EventName, e.Address, e.Date, e.Organizer
+  FROM events e
+  ORDER BY e.Date ASC";
 $result = mysqli_query($conn, $sql);
 ?>
 
@@ -31,19 +28,18 @@ $result = mysqli_query($conn, $sql);
     <section class="events-grid">
       <?php if ($result && mysqli_num_rows($result) > 0): ?>
         <?php while ($row = mysqli_fetch_assoc($result)): ?>
-          <div class="event-card"
-               data-img="https://placehold.co/600x400"
-               data-title="<?= htmlspecialchars($row['EventName']) ?>"
-               data-community="<?= htmlspecialchars($row['CommunityName']) ?>"
-               data-organizer="Organizer #<?= htmlspecialchars($row['OrganizerID']) ?>"
-               data-address="<?= htmlspecialchars($row['Address']) ?>"
-               data-date="<?= htmlspecialchars($row['Date']) ?>">
+    <div class="event-card"
+      data-img="https://placehold.co/600x400"
+      data-title="<?= htmlspecialchars($row['EventName']) ?>"
+      data-organizer="<?= htmlspecialchars($row['Organizer']) ?>"
+      data-address="<?= htmlspecialchars($row['Address']) ?>"
+      data-date="<?= htmlspecialchars($row['Date']) ?>">
             <img src="https://placehold.co/600x400" alt="Event Image" />
             <div class="event-details">
               <h2><?= htmlspecialchars($row['EventName']) ?></h2>
               <p><strong>Date:</strong> <?= htmlspecialchars($row['Date']) ?></p>
               <p><strong>Address:</strong> <?= htmlspecialchars($row['Address']) ?></p>
-              <p><strong>Community:</strong> <?= htmlspecialchars($row['CommunityName']) ?></p>
+              <!-- Community information removed (schema no longer has community table) -->
               <button class="join-btn">Join Event</button>
             </div>
           </div>

@@ -112,6 +112,38 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+/* thumbnail with remove 'x' button */
+.file-preview .thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: inline-block;
+}
+.file-preview .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.file-preview .thumb .remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 /* Composer inline message */
 .composer-message {
   margin-top: 8px;
@@ -133,10 +165,12 @@
   display: block;
 }
 
-/* temporarily hide images UI while you fix uploads */
-.composer-files,
+/* composer file input and preview are visible */
+.composer-files {
+  display: inline-block;
+}
 .file-preview {
-  display: none !important;
+  display: flex;
 }
 
 /* Responsive: keep layout comfortable on small screens */
@@ -211,17 +245,104 @@ h1 {
   margin-bottom: 10px;
 }
 
+/* Ensure images inside posts are constrained and don't overflow */
+.post .post-images {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.post .post-images img {
+  max-width: 100%;
+  width: auto; /* don't force to container width if container is larger */
+  height: auto; /* preserve aspect ratio */
+  max-height: 560px; /* limit extremely tall images */
+  object-fit: contain; /* crop/fit fallback when needed */
+  border-radius: 8px;
+  display: block;
+}
+
+/* Single-image posts: show the single image at 50% width and center it */
+.post .post-images img:only-child {
+  width: 50% !important;
+  max-width: 50% !important;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+/* Carousel styles for multi-image posts */
+.post .post-images.carousel {
+  position: relative;
+  overflow: hidden; /* prevent images from spilling out */
+}
+.post .post-images.carousel .slides {
+  width: 100%;
+  position: relative;
+}
+.post .post-images.carousel .slides img {
+  width: 100%;
+  height: auto;
+  display: none; /* JS will show the active one */
+  border-radius: 8px;
+}
+.post .post-images.carousel .carousel-prev,
+.post .post-images.carousel .carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50; /* ensure arrows are above images */
+}
+.post .post-images.carousel .carousel-prev {
+  left: 8px;
+}
+.post .post-images.carousel .carousel-next {
+  right: 8px;
+}
+
+/* If you have multiple images per post, show them as a grid on wider screens */
+@media (min-width: 720px) {
+  .post .post-images.multiple {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .post .post-images.multiple img {
+    max-height: 360px;
+  }
+}
+
 .post-actions button {
   margin-right: 10px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   border: none;
-  border-radius: 6px;
-  background: #333;
-  color: #fff;
+  border-radius: 8px;
+  background: #0f1720; /* deep dark */
+  color: #e6eef8;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) inset;
 }
 .post-actions button:hover {
-  background: #444;
+  background: #19202a;
+}
+/* liked state: filled heart / accent color */
+.post-actions .like-btn.liked {
+  background: linear-gradient(180deg, #ff6b6b, #ff3b6b);
+  color: #fff;
 }
 
 /* Make comment container hidden until toggled */
@@ -230,15 +351,13 @@ h1 {
 }
 
 .post-actions .comment-toggle {
-  background: transparent;
-  border: none;
-  color: #c9c9c9;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
+  background: #0f1720;
+  color: #dbe7f5;
+  padding: 6px 10px;
+  border-radius: 8px;
 }
 .post-actions .comment-toggle:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: #19202a;
 }
 
 .comments {

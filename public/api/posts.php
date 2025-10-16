@@ -6,6 +6,74 @@ include __DIR__ . '/../../src/db.php';
 // allow anonymous posting (no login required)
 $userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
 
+// helper: resize an image file to fit within max dimensions using GD
+if (!function_exists('resize_image')) {
+    function resize_image($filePath, $maxWidth = 1024, $maxHeight = 1024) {
+        if (!file_exists($filePath)) return false;
+        $info = getimagesize($filePath);
+        if (!$info) return false;
+        list($width, $height, $type) = $info;
+        if ($width <= $maxWidth && $height <= $maxHeight) return true;
+        $ratio = min($maxWidth / $width, $maxHeight / $height);
+        $newW = max(1, (int) round($width * $ratio));
+        $newH = max(1, (int) round($height * $ratio));
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $src = imagecreatefromjpeg($filePath);
+                break;
+            case IMAGETYPE_PNG:
+                $src = imagecreatefrompng($filePath);
+                break;
+            case IMAGETYPE_GIF:
+                $src = imagecreatefromgif($filePath);
+                break;
+            case IMAGETYPE_WEBP:
+                if (function_exists('imagecreatefromwebp')) {
+                    $src = imagecreatefromwebp($filePath);
+                    break;
+                }
+                return false;
+            default:
+                return false;
+        }
+        if (!$src) return false;
+        $dst = imagecreatetruecolor($newW, $newH);
+        if ($type == IMAGETYPE_PNG) {
+            imagealphablending($dst, false);
+            imagesavealpha($dst, true);
+            $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
+            imagefilledrectangle($dst, 0, 0, $newW, $newH, $transparent);
+        } elseif ($type == IMAGETYPE_GIF) {
+            $trans_index = imagecolortransparent($src);
+            if ($trans_index >= 0) {
+                $trans_color = imagecolorsforindex($src, $trans_index);
+                $trans_index_new = imagecolorallocate($dst, $trans_color['red'], $trans_color['green'], $trans_color['blue']);
+                imagefill($dst, 0, 0, $trans_index_new);
+                imagecolortransparent($dst, $trans_index_new);
+            }
+        }
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $width, $height);
+        $saved = false;
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $saved = imagejpeg($dst, $filePath, 85);
+                break;
+            case IMAGETYPE_PNG:
+                $saved = imagepng($dst, $filePath, 6);
+                break;
+            case IMAGETYPE_GIF:
+                $saved = imagegif($dst, $filePath);
+                break;
+            case IMAGETYPE_WEBP:
+                if (function_exists('imagewebp')) $saved = imagewebp($dst, $filePath, 80);
+                break;
+        }
+        imagedestroy($src);
+        imagedestroy($dst);
+        return $saved;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
@@ -50,24 +118,13 @@ if (isset($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'multip
 }
 
 // If Title column exists, require both title and content. Otherwise require content.
-$hasTitleColumn = false;
 $colResCheck = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'Title'");
-if ($colResCheck && mysqli_num_rows($colResCheck) > 0) {
-    $hasTitleColumn = true;
-}
 
-if ($hasTitleColumn) {
-    if ($title === '' || $content === '') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Title and content are required']);
-        exit;
-    }
-} else {
-    if ($content === '' && empty($uploadedFiles)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Empty content']);
-        exit;
-    }
+// Do not require a title; posts must have content or at least one uploaded file.
+if ($content === '' && empty($uploadedFiles)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Empty content']);
+    exit;
 }
 
 // determine user id to use for the insert. If the session is anonymous, try to
@@ -107,7 +164,7 @@ $types = 'is';
 $values = [$userIdParam, $content];
 // detect if `Title` column exists in posts table
 $colRes = mysqli_query($conn, "SHOW COLUMNS FROM posts LIKE 'Title'");
-if ($colRes && mysqli_num_rows($colRes) > 0) {
+if ($colRes && mysqli_num_rows($colRes) > 0 && $title !== '') {
     $columns[] = 'Title';
     $placeholders[] = '?';
     $types .= 's';
@@ -159,8 +216,14 @@ if (!empty($uploadedFiles)) {
         $safeName = 'post_' . $postId . '_' . time() . '_' . bin2hex(random_bytes(6)) . ($ext ? '.' . $ext : '');
         $dest = $uploadDir . '/' . $safeName;
         if (move_uploaded_file($f['tmp_name'], $dest)) {
-            // public path
-            $publicPath = '/uploads/posts/' . $safeName;
+            // attempt to resize the image to a standard maximum size (best-effort)
+            try {
+                @resize_image($dest, 1024, 1024);
+            } catch (Throwable $e) {
+                // ignore resize failures; keep original
+            }
+
+            $publicPath = 'uploads/posts/' . $safeName;
             $savedImages[] = $publicPath;
             // ensure post_images table exists and insert
             $create = "CREATE TABLE IF NOT EXISTS post_images (
@@ -190,7 +253,8 @@ mysqli_stmt_execute($imgRes);
 $imgR = mysqli_stmt_get_result($imgRes);
 $images = [];
 while ($r = mysqli_fetch_assoc($imgR)) {
-    $images[] = $r['path'];
+    // normalize stored paths to be relative (no leading slash)
+    $images[] = ltrim($r['path'], '/');
 }
 if (!empty($images)) {
     $post['images'] = $images;

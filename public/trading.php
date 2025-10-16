@@ -2,10 +2,11 @@
 session_start();
 include __DIR__ . '/../src/db.php';
 
-// Fetch trading items with owner info
-$sql = "SELECT t.ItemID, t.Name AS ItemName, t.Category, t.DateAdded, a.username
-        FROM TradingList t
-        JOIN Accounts a ON t.UserID = a.UserID
+// Fetch trading items with owner info and first image (if any)
+$sql = "SELECT t.ItemID, t.Name AS ItemName, t.Category, t.DateAdded, t.UserID AS OwnerID, a.username,
+               (SELECT path FROM trading_images ti WHERE ti.ItemID = t.ItemID ORDER BY ti.id ASC LIMIT 1) AS ImagePath
+        FROM tradinglist t
+        JOIN accounts a ON t.UserID = a.UserID
         ORDER BY t.DateAdded DESC";
 $result = mysqli_query($conn, $sql);
 ?>
@@ -27,10 +28,12 @@ $result = mysqli_query($conn, $sql);
     <h1>Trading</h1>
     <p>Browse available items for trading.</p>
 
+    <!-- Post Trade feature removed -->
+
     <section class="trading-grid">
       <?php if ($result && mysqli_num_rows($result) > 0): ?>
         <?php while ($row = mysqli_fetch_assoc($result)): ?>
-          <div class="trading-card">
+          <div class="trading-card" data-itemid="<?= intval($row['ItemID']) ?>" data-ownerid="<?= intval($row['OwnerID']) ?>">
             <!-- Replace with actual image column if you add it later -->
             <img src="https://placehold.co/600x400" alt="Item Image" />
             <div class="trading-details">
@@ -49,7 +52,7 @@ $result = mysqli_query($conn, $sql);
   </main>
 
   <!-- Popup Modal for Trading -->
-  <div id="trading-popup" class="trading-popup" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; align-items: center; justify-content: center;">
+  <div id="trading-popup" class="trading-popup">
     <div class="trading-popup-content">
       <span class="trading-popup-close">&times;</span>
       <img id="trading-popup-img" src="" alt="Item Image" />
@@ -60,6 +63,16 @@ $result = mysqli_query($conn, $sql);
       <button id="trading-popup-action-btn" class="request-btn" style="display: none">
         Request Trade
       </button>
+    </div>
+  </div>
+
+  <!-- Request Trade Modal (choose your offered item) -->
+  <div id="requestTradeModal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" style="max-width:700px;">
+      <button id="requestTradeClose" style="position:absolute;right:16px;top:16px;">&times;</button>
+      <h2>Select an item to offer</h2>
+      <div id="myItemsList" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;"></div>
     </div>
   </div>
 

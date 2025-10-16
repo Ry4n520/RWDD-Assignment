@@ -76,17 +76,20 @@
 
 /* Popup styles */
 .trading-popup {
-  /* Ensure overlay is fixed and centered even if other styles try to override */
+  /* Hidden by default; toggle .open to display */
   position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  display: flex; /* JS sets display to flex on open */
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
+.trading-popup.open {
+  display: flex !important;
 }
 .trading-popup-content {
   /* Modal card styling */

@@ -5,7 +5,43 @@ header('Content-Type: application/json');
 session_start();
 include __DIR__ . '/../../src/db.php';
 $userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
+// map expected column names to actual table columns
+$colMap = [
+    'post' => null,
+    'user' => null,
+    'content' => null,
+    'id' => null,
+    'created' => null,
+];
+$desc = mysqli_query($conn, "DESCRIBE comments");
+$fields = [];
+if ($desc) {
+    while ($r = mysqli_fetch_assoc($desc)) {
+        $fields[] = $r['Field'];
+    }
+}
+// helpers to find column by candidates
+$find = function ($candidates) use ($fields) {
+    foreach ($candidates as $c) {
+        if (in_array($c, $fields, true)) return $c;
+    }
+    return null;
+};
 
+$colMap['id'] = $find(['CommentID', 'comment_id', 'id', 'ID']);
+$colMap['post'] = $find(['PostID', 'post_id', 'postId', 'postid']);
+$colMap['user'] = $find(['UserID', 'user_id', 'userid', 'User_Id']);
+$colMap['content'] = $find(['Content', 'content', 'Body', 'body', 'Comment', 'comment', 'Text', 'text']);
+$colMap['created'] = $find(['Created_at', 'created_at', 'CreatedAt', 'createdAt', 'created', 'Created']);
+
+// Ensure minimal columns exist
+if (!$colMap['post'] || !$colMap['user'] || !$colMap['id']) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'comments table missing required columns']);
+    exit;
+}
+
+// GET comments
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $postId = intval($_GET['postId'] ?? 0);
     if ($postId <= 0) {
@@ -13,7 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['success' => false, 'error' => 'postId required']);
         exit;
     }
-    $stmt = mysqli_prepare($conn, "SELECT c.CommentID, c.Content, c.Created_at, a.username FROM comments c JOIN accounts a ON c.UserID = a.UserID WHERE c.PostID = ? ORDER BY c.Created_at ASC");
+    $contentCol = $colMap['content'] ? "c.`" . $colMap['content'] . "` AS Content" : "'' AS Content";
+    $createdCol = $colMap['created'] ? "c.`" . $colMap['created'] . "` AS Created_at" : "NOW() AS Created_at";
+    $sql = "SELECT c.`" . $colMap['id'] . "` AS CommentID, " . $contentCol . ", " . $createdCol . ", a.username FROM comments c JOIN accounts a ON c.`" . $colMap['user'] . "` = a.UserID WHERE c.`" . $colMap['post'] . "` = ? ORDER BY " . ($colMap['created'] ? "c.`" . $colMap['created'] . "` ASC" : "1 ASC");
+    $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, 'i', $postId);
     mysqli_stmt_execute($stmt);
     $res = mysqli_stmt_get_result($stmt);
@@ -23,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
+// POST create comment
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$userId) {
         http_response_code(401);
@@ -37,16 +77,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'error' => 'Invalid input']);
         exit;
     }
-    $stmt = mysqli_prepare($conn, "INSERT INTO comments (PostID, UserID, Content) VALUES (?, ?, ?)");
-    mysqli_stmt_bind_param($stmt, 'iis', $postId, $userId, $content);
+    if (!$colMap['content']) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'No content column in comments table']);
+        exit;
+    }
+
+    // build insert SQL dynamically
+    $insCols = ["`" . $colMap['post'] . "`", "`" . $colMap['user'] . "`", "`" . $colMap['content'] . "`"];
+    $placeholders = ["?", "?", "?"];
+    $types = 'iis';
+    $sql = "INSERT INTO comments (" . implode(',', $insCols) . ") VALUES (" . implode(',', $placeholders) . ")";
+    $stmt = mysqli_prepare($conn, $sql);
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Prepare failed: ' . mysqli_error($conn)]);
+        exit;
+    }
+    mysqli_stmt_bind_param($stmt, $types, $postId, $userId, $content);
     $ok = mysqli_stmt_execute($stmt);
     if (!$ok) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'DB insert failed']);
+        echo json_encode(['success' => false, 'error' => 'DB insert failed', 'detail' => mysqli_error($conn)]);
         exit;
     }
     $commentId = mysqli_insert_id($conn);
-    $stmt = mysqli_prepare($conn, "SELECT c.CommentID, c.Content, c.Created_at, a.username FROM comments c JOIN accounts a ON c.UserID = a.UserID WHERE c.CommentID = ? LIMIT 1");
+
+    // fetch created comment with username
+    $contentCol = $colMap['content'] ? "c.`" . $colMap['content'] . "` AS Content" : "'' AS Content";
+    $createdCol = $colMap['created'] ? "c.`" . $colMap['created'] . "` AS Created_at" : "NOW() AS Created_at";
+    $sql = "SELECT c.`" . $colMap['id'] . "` AS CommentID, " . $contentCol . ", " . $createdCol . ", a.username FROM comments c JOIN accounts a ON c.`" . $colMap['user'] . "` = a.UserID WHERE c.`" . $colMap['id'] . "` = ? LIMIT 1";
+    $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, 'i', $commentId);
     mysqli_stmt_execute($stmt);
     $res = mysqli_stmt_get_result($stmt);

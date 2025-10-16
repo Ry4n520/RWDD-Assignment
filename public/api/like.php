@@ -1,6 +1,23 @@
 <?php
 // POST /api/like.php with JSON { type: 'post'|'comment', id: <int> }
 header('Content-Type: application/json');
+// avoid PHP warnings/notices printing HTML and breaking JSON responses
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+ob_start();
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err) {
+        http_response_code(500);
+        // clear any buffered output and return JSON error
+        ob_end_clean();
+        echo json_encode(['success' => false, 'error' => 'Fatal error: ' . ($err['message'] ?? 'unknown')]);
+        return;
+    }
+    // flush any buffered output (should be JSON)
+    $out = ob_get_clean();
+    if ($out !== '') echo $out;
+});
 session_start();
 include __DIR__ . '/../../src/db.php';
 $userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
@@ -25,7 +42,13 @@ if (!in_array($type, ['post','comment']) || $id <= 0) {
 
 if ($type === 'post') {
     // check existing
-    $stmt = mysqli_prepare($conn, "SELECT LikeID FROM postlikes WHERE PostID = ? AND UserID = ? LIMIT 1");
+    // Use a constant select so we don't rely on a specific primary key column name
+    $stmt = mysqli_prepare($conn, "SELECT 1 FROM postlikes WHERE PostID = ? AND UserID = ? LIMIT 1");
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'DB prepare failed', 'detail' => mysqli_error($conn)]);
+        exit;
+    }
     mysqli_stmt_bind_param($stmt, 'ii', $id, $userId);
     mysqli_stmt_execute($stmt);
     $res = mysqli_stmt_get_result($stmt);
@@ -48,7 +71,13 @@ if ($type === 'post') {
 }
 
 if ($type === 'comment') {
-    $stmt = mysqli_prepare($conn, "SELECT LikeID FROM commentlikes WHERE CommentID = ? AND UserID = ? LIMIT 1");
+    // Schema-agnostic check for existing comment like
+    $stmt = mysqli_prepare($conn, "SELECT 1 FROM commentlikes WHERE CommentID = ? AND UserID = ? LIMIT 1");
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'DB prepare failed', 'detail' => mysqli_error($conn)]);
+        exit;
+    }
     mysqli_stmt_bind_param($stmt, 'ii', $id, $userId);
     mysqli_stmt_execute($stmt);
     $res = mysqli_stmt_get_result($stmt);

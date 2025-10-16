@@ -54,6 +54,14 @@
   color: #fff;
   font-size: 14px;
 }
+
+/* Hide the small 'x' / edit overlay on profile avatar when requested */
+.avatar-edit {
+  display: none !important;
+}
+.avatar-edit .edit-icon {
+  display: none !important;
+}
 .profile-details {
   flex: 1;
 }

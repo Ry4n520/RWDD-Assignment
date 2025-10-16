@@ -6,6 +6,8 @@ include __DIR__ . '/../src/db.php';
 session_start();
 $composerAvatar = 'assets/images/default-profile.jpg';
 $sessUid = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
+// integer session uid for SQL
+$sessUidInt = $sessUid ? intval($sessUid) : 0;
 if ($sessUid) {
   $u = intval($sessUid);
   $r = mysqli_query($conn, "SELECT profile_picture FROM accounts WHERE UserID = " . $u . " LIMIT 1");
@@ -20,7 +22,7 @@ $postsSql = "
   SELECT p.PostID, p.Content, p.Title, p.Created_at, a.username,
     (SELECT COUNT(*) FROM postlikes pl WHERE pl.PostID = p.PostID) AS like_count,
     (SELECT COUNT(*) FROM comments c WHERE c.PostID = p.PostID) AS comment_count,
-    (SELECT GROUP_CONCAT(path SEPARATOR '||') FROM images pi WHERE pi.PostID = p.PostID ORDER BY pi.id ASC) AS images
+  (SELECT GROUP_CONCAT(path SEPARATOR '||') FROM post_images pi WHERE pi.PostID = p.PostID ORDER BY pi.id ASC) AS images
   FROM posts p
   JOIN accounts a ON p.UserID = a.UserID
   ORDER BY p.Created_at DESC
@@ -48,8 +50,7 @@ $posts = mysqli_query($conn, $postsSql);
         <div class="composer-top">
           <img class="composer-avatar" src="<?= htmlspecialchars($composerAvatar) ?>" alt="avatar">
           <div class="composer-fields">
-            <input name="title" id="postTitle" class="composer-title" placeholder="Title (required)" maxlength="255" required>
-            <textarea name="content" id="postContent" class="composer-input" placeholder="Text (optional)" rows="4"></textarea>
+            <textarea name="content" id="postContent" class="composer-input" placeholder="Share something with the community..." rows="4" required></textarea>
 
             <div class="composer-file-row">
               <input id="postFiles" name="images[]" class="composer-files" type="file" accept="image/*" multiple>
@@ -68,16 +69,22 @@ $posts = mysqli_query($conn, $postsSql);
     <section class="posts">
       <?php if ($posts && mysqli_num_rows($posts) > 0): ?>
         <?php while ($post = mysqli_fetch_assoc($posts)): ?>
+          <?php
+            // determine whether current user liked this post (if logged in)
+            $liked = false;
+            if ($sessUidInt) {
+              $check = mysqli_query($conn, "SELECT 1 FROM postlikes WHERE PostID = " . intval($post['PostID']) . " AND UserID = " . $sessUidInt . " LIMIT 1");
+              if ($check && mysqli_num_rows($check) > 0) $liked = true;
+            }
+          ?>
           <article class="post" data-postid="<?= $post['PostID'] ?>">
             <div class="post-header">
-              <?php if (!empty($post['Title'])): ?>
-                <h3 class="post-title"><?= htmlspecialchars($post['Title']) ?></h3>
-              <?php endif; ?>
-              <div class="post-meta"><strong><?= htmlspecialchars($post['username']) ?></strong> <span class="time"><?= htmlspecialchars($post['Created_at']) ?></span></div>
+              <h3 class="post-title"><?= htmlspecialchars($post['username']) ?></h3>
+              <div class="post-meta"><span class="time"><?= htmlspecialchars($post['Created_at']) ?></span></div>
             </div>
             <p class="post-content"><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
             <div class="post-actions">
-              <a href="#" class="like-btn" data-type="post" data-id="<?= $post['PostID'] ?>">👍 <?= intval($post['like_count']) ?></a>
+              <button type="button" class="like-btn<?= $liked ? ' liked' : '' ?>" data-type="post" data-id="<?= $post['PostID'] ?>" data-liked="<?= $liked ? '1' : '0' ?>" aria-pressed="<?= $liked ? 'true' : 'false' ?>">👍 <?= intval($post['like_count']) ?></button>
               <button type="button" class="comment-toggle" data-target="#comments-<?= $post['PostID'] ?>">💬 <?= intval($post['comment_count']) ?></button>
             </div>
             <div class="post-images">
@@ -108,6 +115,7 @@ $posts = mysqli_query($conn, $postsSql);
     </section>
   </main>
 
+  <script>window.isLoggedIn = <?= $sessUid ? 'true' : 'false' ?>;</script>
   <script src="assets/js/communities.js?v=20251009"></script>
 </body>
 </html>

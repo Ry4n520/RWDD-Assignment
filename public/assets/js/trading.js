@@ -1,94 +1,110 @@
 // trading-popup.js
-// Handles trading card popup logic (similar to events)
+// Robust trading UI with event delegation and null checks
 
 document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.trading-card').forEach((card) => {
-    card.style.cursor = 'pointer';
-    card.addEventListener('click', function (e) {
-      // Prevent button click from triggering popup
-      if (e.target.classList.contains('request-btn')) return;
-      const img = card.querySelector('img').src;
-      const title = card.querySelector('h2').textContent;
-      const owner = card.querySelector('p').textContent;
-      document.getElementById('trading-popup-img').src = img;
-      document.getElementById('trading-popup-title').textContent = title;
-      document.getElementById('trading-popup-owner').textContent = owner;
-      const popup = document.getElementById('trading-popup');
-      // Ensure popup is direct child of body to avoid transformed/stacking ancestors
-      if (popup.parentElement !== document.body) {
-        document.body.appendChild(popup);
-      }
-      // Ensure overlay shows and is fixed-centered even if CSS fails/cached
-      popup.style.display = 'flex';
-      popup.style.position = 'fixed';
-      popup.style.top = '0';
-      popup.style.left = '0';
-      popup.style.right = '0';
-      popup.style.bottom = '0';
-      popup.style.alignItems = 'center';
-      popup.style.justifyContent = 'center';
-      popup.style.background = 'rgba(0, 0, 0, 0.6)';
-      popup.style.zIndex = '10000';
-      // Style the modal card content inline as a fallback
-      const content = popup.querySelector('.trading-popup-content');
-      if (content) {
-        content.style.background = '#fff';
-        content.style.color = '#222';
-        content.style.borderRadius = '10px';
-        content.style.padding = '50px 20px 20px 20px';
-        content.style.maxWidth = '700px';
-        content.style.width = '90%';
-        content.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
-        content.style.position = 'relative';
+  const grid = document.querySelector('.trading-grid');
+  const popup = document.getElementById('trading-popup');
+  const popupImg = popup ? popup.querySelector('#trading-popup-img') : null;
+  const popupTitle = popup ? popup.querySelector('#trading-popup-title') : null;
+  const popupOwner = popup ? popup.querySelector('#trading-popup-owner') : null;
+  const popupAction = document.getElementById('trading-popup-action-btn');
 
-        const imgEl = content.querySelector('img');
-        if (imgEl) {
-          imgEl.style.width = '95%';
-          imgEl.style.height = '250px';
-          imgEl.style.objectFit = 'cover';
-          imgEl.style.borderRadius = '8px';
-          imgEl.style.display = 'block';
-          imgEl.style.margin = '0 auto 20px auto';
-        }
-      }
-      // Prevent background scroll while popup is open
-      document.body.style.overflow = 'hidden';
-      // Show the popup button when popup opens
-      var popupBtn = document.getElementById('trading-popup-action-btn');
-      if (popupBtn) popupBtn.style.display = 'inline-block';
-    });
-  });
-  // Close popup
-  document.querySelector('.trading-popup-close').onclick = function () {
-    const popup = document.getElementById('trading-popup');
-    popup.style.display = 'none';
-    // Restore background scroll
-    document.body.style.overflow = '';
-    // Hide the button again after closing
-    var popupBtn = document.getElementById('trading-popup-action-btn');
-    if (popupBtn) popupBtn.style.display = 'none';
-  };
-  // Close popup when clicking outside content
-  document.getElementById('trading-popup').onclick = function (e) {
-    if (e.target === this) {
-      this.style.display = 'none';
-      // Restore background scroll
-      document.body.style.overflow = '';
-      // Hide the button again after closing
-      var popupBtn = document.getElementById('trading-popup-action-btn');
-      if (popupBtn) popupBtn.style.display = 'none';
-    }
-  };
-
-  // Popup button action
-  var popupBtn = document.getElementById('trading-popup-action-btn');
-  if (popupBtn) {
-    popupBtn.onclick = function () {
-      alert('Trade request sent!');
-      const popup = document.getElementById('trading-popup');
-      popup.style.display = 'none';
-      // Restore background scroll
-      document.body.style.overflow = '';
-    };
+  function showPopupForCard(card) {
+    if (!popup || !card) return;
+    const img = card.querySelector('img') ? card.querySelector('img').src : '';
+    const title = card.querySelector('h2')
+      ? card.querySelector('h2').textContent
+      : '';
+    const ownerText = card.querySelector('.trading-details p')
+      ? card.querySelector('.trading-details p').textContent
+      : '';
+    if (popupImg) popupImg.src = img;
+    if (popupTitle) popupTitle.textContent = title;
+    if (popupOwner) popupOwner.textContent = ownerText;
+    // ensure modal is attached to body
+    if (popup.parentElement !== document.body) document.body.appendChild(popup);
+    popup.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (popupAction) popupAction.style.display = 'inline-block';
   }
+
+  // close handlers (safe)
+  const closeBtn = document.querySelector('.trading-popup-close');
+  if (closeBtn && popup)
+    closeBtn.addEventListener('click', () => {
+      popup.classList.remove('open');
+      document.body.style.overflow = '';
+      if (popupAction) popupAction.style.display = 'none';
+    });
+  if (popup)
+    popup.addEventListener('click', (e) => {
+      // close when clicking the overlay itself
+      if (e.target === popup) {
+        popup.classList.remove('open');
+        document.body.style.overflow = '';
+        if (popupAction) popupAction.style.display = 'none';
+      }
+    });
+
+  // simple POST helper
+  async function apiPost(path, params) {
+    try {
+      const res = await fetch(path, {
+        method: 'POST',
+        credentials: 'include',
+        body: new URLSearchParams(params),
+      });
+      const txt = await res.text();
+      try {
+        return JSON.parse(txt);
+      } catch (e) {
+        return { ok: false, raw: txt };
+      }
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
+
+  // Delegated click handler for grid
+  if (grid) {
+    grid.addEventListener('click', async (e) => {
+      const requestBtn = e.target.closest('.request-btn');
+      const card = e.target.closest('.trading-card');
+      if (!card) return;
+
+      // If click was on Request Trade button -> show a simple transient 'Request sent' popup
+      if (requestBtn) {
+        e.stopPropagation();
+        // transient message element
+        const showTransient = (msg) => {
+          let el = document.createElement('div');
+          el.className = 'request-sent-transient';
+          el.textContent = msg;
+          // small centered toast-like box
+          el.style.position = 'fixed';
+          el.style.left = '50%';
+          el.style.top = '20%';
+          el.style.transform = 'translateX(-50%)';
+          el.style.background = 'rgba(0,0,0,0.85)';
+          el.style.color = '#fff';
+          el.style.padding = '10px 16px';
+          el.style.borderRadius = '8px';
+          el.style.zIndex = 2000;
+          document.body.appendChild(el);
+          setTimeout(() => {
+            el.style.transition = 'opacity 300ms ease';
+            el.style.opacity = '0';
+          }, 900);
+          setTimeout(() => el.remove(), 1300);
+        };
+        showTransient('Request sent');
+        return;
+      }
+
+      // Otherwise, clicking the card should open popup details
+      showPopupForCard(card);
+    });
+  }
+
+  // Post Trade feature removed
 });
