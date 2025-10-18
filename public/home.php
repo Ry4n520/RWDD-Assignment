@@ -8,10 +8,10 @@
   <title>Home Page</title>
 
   <!-- Navbar CSS -->
-  <link rel="stylesheet" href="assets/css/navbar.css">
+  <link rel="stylesheet" href="assets/css/navbar.css?">
 
   <!-- Home Page CSS -->
-  <link rel="stylesheet" href="assets/css/home.css">
+  <link rel="stylesheet" href="assets/css/home.css?">
 
   <!-- JS -->
   <script src="assets/js/navbar.js" defer></script>

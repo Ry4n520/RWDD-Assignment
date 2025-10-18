@@ -18,7 +18,7 @@
 
 .events-page p {
   margin-bottom: 20px;
-  color: #666;
+  color: color-mix(in srgb, var(--text-color) 70%, black 30%);
 }
 
 .events-list {
@@ -28,14 +28,16 @@
 }
 
 .event-card {
-  background: #23233a;
-  color: #fff;
+  background: color-mix(in srgb, var(--post-bg) 85%, transparent 15%);
+  color: var(--text-color);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
   display: flex;
   flex-direction: column;
-  border: 4px solid #29294a; /* Subtle border */
+  border: 4px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .event-card img {
@@ -63,15 +65,15 @@
 .join-btn {
   margin-top: 10px;
   padding: 10px 15px;
-  background-color: #4cafef;
+  background-color: var(--accent-color);
   border: none;
   border-radius: 5px;
-  color: #fff;
+  color: var(--text-color);
   cursor: pointer;
 }
 
 .join-btn:hover {
-  background-color: #3498db;
+  background-color: color-mix(in srgb, var(--accent-color) 80%, black 20%);
 }
 
 /* Popup styles */
@@ -88,8 +90,8 @@
   z-index: 1000;
 }
 .event-popup-content {
-  background: #fff;
-  color: #222;
+  background: color-mix(in srgb, var(--primary-color) 10%, white 90%);
+  color: color-mix(in srgb, var(--text-color) 80%, black 20%);
   border-radius: 10px;
   padding: 50px 20px 20px 20px;
   max-width: 700px;
