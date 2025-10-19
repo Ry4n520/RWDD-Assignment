@@ -1,7 +1,8 @@
 <?php
 /**
- * Create trading list items
+ * Create/Delete trading list items
  * POST fields: name (required), category (optional), description (optional), meetup_location (optional)
+ * DELETE: item_id (required) - deletes trading item (owner or admin only)
  */
 session_start();
 header('Content-Type: application/json');
@@ -9,6 +10,115 @@ include __DIR__ . '/../../src/db.php';
 
 $me = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
 if (!$me) { http_response_code(401); echo json_encode(['ok'=>false,'error'=>'not_authenticated']); exit; }
+
+// Check if user is admin
+$isAdmin = false;
+$userStmt = mysqli_prepare($conn, "SELECT usertype FROM accounts WHERE UserID = ? LIMIT 1");
+mysqli_stmt_bind_param($userStmt, 'i', $me);
+mysqli_stmt_execute($userStmt);
+$userRes = mysqli_stmt_get_result($userStmt);
+if ($userRow = mysqli_fetch_assoc($userRes)) {
+    if (isset($userRow['usertype']) && strtolower($userRow['usertype']) === 'admin') {
+        $isAdmin = true;
+    }
+}
+
+// Handle PUT request (Update item)
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $itemId = intval($input['item_id'] ?? 0);
+    $name = trim($input['name'] ?? '');
+    $description = trim($input['description'] ?? '');
+    $category = trim($input['category'] ?? '');
+    $meetupLocation = trim($input['meetup_location'] ?? '');
+    
+    if (!$itemId) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Invalid input']);
+        exit;
+    }
+    
+    if ($name === '' || $description === '' || $meetupLocation === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Name, description, and meetup location are required']);
+        exit;
+    }
+    
+    // Check ownership (admins can edit any item)
+    if (!$isAdmin) {
+        $stmt = mysqli_prepare($conn, "SELECT UserID FROM tradinglist WHERE ItemID = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $itemId);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $item = mysqli_fetch_assoc($res);
+        
+        if (!$item || intval($item['UserID']) !== intval($me)) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Not authorized']);
+            exit;
+        }
+    }
+    
+    // Update the item
+    $stmt = mysqli_prepare($conn, "UPDATE tradinglist SET Name = ?, Description = ?, Category = ?, MeetupLocation = ? WHERE ItemID = ?");
+    mysqli_stmt_bind_param($stmt, 'ssssi', $name, $description, $category, $meetupLocation, $itemId);
+    $ok = mysqli_stmt_execute($stmt);
+    
+    if ($ok) {
+        echo json_encode(['ok' => true, 'message' => 'Item updated successfully']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'Failed to update item']);
+    }
+    mysqli_stmt_close($stmt);
+    exit;
+}
+
+// Handle DELETE request
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $itemId = intval($input['item_id'] ?? 0);
+    
+    if (!$itemId) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Invalid input']);
+        exit;
+    }
+    
+    // Check ownership (admins can delete any item)
+    if (!$isAdmin) {
+        $stmt = mysqli_prepare($conn, "SELECT UserID FROM tradinglist WHERE ItemID = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $itemId);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $item = mysqli_fetch_assoc($res);
+        
+        if (!$item || intval($item['UserID']) !== intval($me)) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Not authorized']);
+            exit;
+        }
+    }
+    
+    // Delete images from disk and DB
+    $imgRes = mysqli_query($conn, "SELECT path FROM trading_images WHERE ItemID = " . $itemId);
+    if ($imgRes) {
+        while ($img = mysqli_fetch_assoc($imgRes)) {
+            $filePath = __DIR__ . '/../' . ltrim($img['path'], '/');
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
+        mysqli_query($conn, "DELETE FROM trading_images WHERE ItemID = " . $itemId);
+    }
+    
+    // Delete trading requests and the item
+    mysqli_query($conn, "DELETE FROM tradingrequests WHERE ItemID = " . $itemId);
+    mysqli_query($conn, "DELETE FROM tradinglist WHERE ItemID = " . $itemId);
+    
+    echo json_encode(['ok' => true]);
+    exit;
+}
 
 // do not create table; use existing `tradinglist` table from DB dump
 

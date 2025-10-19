@@ -139,13 +139,13 @@ if (!empty($profileAccountId) && isset($conn)) {
   <title>Profile</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/navbar.css">
+  <link rel="stylesheet" href="assets/css/navbar.css?v=20251020c">
   <link rel="stylesheet" href="assets/css/theme.css?v=20251018">
   <link rel="stylesheet" href="assets/css/profile.css?v=20251017">
   <link rel="stylesheet" href="assets/css/communities.css">
 
   <!-- JS -->
-  <script src="assets/js/navbar.js?v=20251018" defer></script>
+  <script src="assets/js/navbar.js?v=20251020" defer></script>
 </head>
 <body>
   <!-- Navbar -->

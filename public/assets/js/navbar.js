@@ -29,3 +29,19 @@ function closeSidebar() {
 
 // Initialize sidebar inert state
 updateNavbar(media);
+
+// Theme toggle functionality
+const themeToggle = document.getElementById('theme-toggle');
+
+// Get saved theme from localStorage or default to dark
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+// Toggle theme
+themeToggle.addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+});

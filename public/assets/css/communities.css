@@ -240,6 +240,78 @@ h1 {
   margin-bottom: 10px;
 }
 
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Three-dot menu */
+.post-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.post-menu-btn {
+  background: transparent;
+  border: none;
+  color: #c9c9c9;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.post-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #2a2a3e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  min-width: 120px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  display: none;
+  overflow: hidden;
+}
+
+.post-menu-dropdown[aria-hidden='false'] {
+  display: block;
+}
+
+.post-menu-dropdown .menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  color: #c9c9c9;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.post-menu-dropdown .menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-menu-dropdown .menu-item.delete-post {
+  color: #ff6b6b;
+}
+
+.post-menu-dropdown .menu-item.delete-post:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
 .post-content {
   font-size: 1rem;
   margin-bottom: 10px;

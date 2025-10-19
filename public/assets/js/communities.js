@@ -581,3 +581,91 @@ document.addEventListener('DOMContentLoaded', () => initPostCarousels());
 
 // Also provide a helper for newly-inserted posts (used after posting)
 window.initPostCarousels = initPostCarousels;
+
+// --- Three-dot menu functionality ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Toggle menu dropdown
+  document.addEventListener('click', (e) => {
+    const menuBtn = e.target.closest('.post-menu-btn');
+
+    if (menuBtn) {
+      e.stopPropagation();
+      const menu = menuBtn.closest('.post-menu');
+      const dropdown = menu.querySelector('.post-menu-dropdown');
+      const isHidden = dropdown.getAttribute('aria-hidden') === 'true';
+
+      // Close all other dropdowns
+      document.querySelectorAll('.post-menu-dropdown').forEach((d) => {
+        d.setAttribute('aria-hidden', 'true');
+      });
+
+      // Toggle current dropdown
+      dropdown.setAttribute('aria-hidden', isHidden ? 'false' : 'true');
+    } else {
+      // Close all dropdowns when clicking outside
+      document.querySelectorAll('.post-menu-dropdown').forEach((d) => {
+        d.setAttribute('aria-hidden', 'true');
+      });
+    }
+  });
+
+  // Edit post
+  document.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('.edit-post');
+    if (!editBtn) return;
+
+    const postId = editBtn.dataset.postid;
+    const post = document.querySelector(`.post[data-postid="${postId}"]`);
+    if (!post) return;
+
+    const contentEl = post.querySelector('.post-content');
+    const currentContent = contentEl.textContent.trim();
+
+    // Show prompt to edit
+    const newContent = prompt('Edit your post:', currentContent);
+    if (newContent === null || newContent.trim() === '') return;
+
+    try {
+      const data = await apiFetch('api/posts.php', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: postId, content: newContent.trim() }),
+      });
+
+      if (data.ok) {
+        contentEl.textContent = newContent.trim();
+        alert('Post updated successfully');
+      }
+    } catch (err) {
+      alert('Failed to update post: ' + err.message);
+    }
+  });
+
+  // Delete post
+  document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-post');
+    if (!deleteBtn) return;
+
+    const postId = deleteBtn.dataset.postid;
+
+    if (!confirm('Are you sure you want to delete this post?')) return;
+
+    try {
+      const data = await apiFetch('api/posts.php', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: postId }),
+      });
+
+      if (data.ok) {
+        const post = document.querySelector(`.post[data-postid="${postId}"]`);
+        if (post) {
+          post.remove();
+          alert('Post deleted successfully');
+        }
+      }
+    } catch (err) {
+      alert('Failed to delete post: ' + err.message);
+    }
+  });
+});

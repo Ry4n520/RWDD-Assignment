@@ -46,9 +46,47 @@ nav a {
   color: var(--text-color);
   padding: 1em 2em;
   transition: background-color 150ms ease;
+  position: relative;
 }
 nav a:hover {
   background-color: var(--hover-color);
+}
+nav a.active-link {
+  border-bottom: 2px solid var(--text-color);
+}
+.theme-toggle-li {
+  margin-left: auto;
+}
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 1em 2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms ease;
+  border-radius: 4px;
+}
+.theme-toggle-btn:hover {
+  background-color: var(--hover-color);
+}
+.theme-toggle-btn svg {
+  width: 24px;
+  height: 24px;
+}
+.theme-toggle-btn .sun-icon {
+  display: none;
+}
+.theme-toggle-btn .moon-icon {
+  display: block;
+}
+:root[data-theme='light'] .theme-toggle-btn .sun-icon {
+  display: block;
+}
+:root[data-theme='light'] .theme-toggle-btn .moon-icon {
+  display: none;
 }
 #open-sidebar-button {
   display: none;
@@ -118,6 +156,8 @@ nav a:hover {
   nav ul {
     width: 100%;
     flex-direction: column;
+    position: relative;
+    padding-bottom: 80px;
   }
   nav a {
     width: 100%;
@@ -128,5 +168,16 @@ nav a:hover {
   }
   nav .home-li {
     margin-right: unset;
+  }
+  .theme-toggle-li {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    margin-left: unset;
+  }
+  .theme-toggle-btn {
+    padding: 0.8em;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
   }
 }

@@ -8,18 +8,21 @@ $composerAvatar = 'assets/images/default-profile.jpg';
 $sessUid = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
 // integer session uid for SQL
 $sessUidInt = $sessUid ? intval($sessUid) : 0;
+$isAdmin = false;
 if ($sessUid) {
   $u = intval($sessUid);
-  $r = mysqli_query($conn, "SELECT profile_picture FROM accounts WHERE UserID = " . $u . " LIMIT 1");
+  $r = mysqli_query($conn, "SELECT profile_picture, usertype FROM accounts WHERE UserID = " . $u . " LIMIT 1");
   if ($r && mysqli_num_rows($r) > 0) {
     $row = mysqli_fetch_assoc($r);
     if (!empty($row['profile_picture'])) $composerAvatar = $row['profile_picture'];
+    // Check if user is admin (usertype could be 'admin', 'Admin', or is_admin = 1)
+    if (isset($row['usertype']) && strtolower($row['usertype']) === 'admin') $isAdmin = true;
   }
 }
 
 // Fetch posts with like count and comment count
 $postsSql = "
-  SELECT p.PostID, p.Content, p.Title, p.Created_at, a.username,
+  SELECT p.PostID, p.Content, p.Title, p.Created_at, p.UserID, a.username,
     (SELECT COUNT(*) FROM postlikes pl WHERE pl.PostID = p.PostID) AS like_count,
     (SELECT COUNT(*) FROM comments c WHERE c.PostID = p.PostID) AS comment_count,
   (SELECT GROUP_CONCAT(path SEPARATOR '||') FROM post_images pi WHERE pi.PostID = p.PostID ORDER BY pi.id ASC) AS images
@@ -36,9 +39,10 @@ $posts = mysqli_query($conn, $postsSql);
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Communities</title>
   <?php $cssVer = file_exists(__DIR__ . '/assets/css/communities.css') ? filemtime(__DIR__ . '/assets/css/communities.css') : time(); ?>
-  <link rel="stylesheet" href="assets/css/navbar.css?v=<?= $cssVer ?>">
+  <link rel="stylesheet" href="assets/css/navbar.css?v=20251020c">
+  <link rel="stylesheet" href="assets/css/theme.css?v=20251018">
   <link rel="stylesheet" href="assets/css/communities.css?v=<?= $cssVer ?>">
-  <script src="assets/js/navbar.js" defer></script>
+  <script src="assets/js/navbar.js?v=20251020" defer></script>
 </head>
 <body>
   <?php include 'includes/header.php'; ?>
@@ -80,7 +84,24 @@ $posts = mysqli_query($conn, $postsSql);
           <article class="post" data-postid="<?= $post['PostID'] ?>">
             <div class="post-header">
               <h3 class="post-title"><?= htmlspecialchars($post['username']) ?></h3>
-              <div class="post-meta"><span class="time"><?= htmlspecialchars($post['Created_at']) ?></span></div>
+              <div class="post-meta">
+                <span class="time"><?= htmlspecialchars($post['Created_at']) ?></span>
+                <?php if ($sessUidInt && ($isAdmin || $sessUidInt == intval($post['UserID']))): ?>
+                  <div class="post-menu">
+                    <button type="button" class="post-menu-btn" aria-label="Post options" aria-haspopup="true">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="2"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="12" cy="19" r="2"/>
+                      </svg>
+                    </button>
+                    <div class="post-menu-dropdown" aria-hidden="true">
+                      <button type="button" class="menu-item edit-post" data-postid="<?= $post['PostID'] ?>">Edit</button>
+                      <button type="button" class="menu-item delete-post" data-postid="<?= $post['PostID'] ?>">Delete</button>
+                    </div>
+                  </div>
+                <?php endif; ?>
+              </div>
             </div>
             <p class="post-content"><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
             <div class="post-actions">
@@ -116,6 +137,6 @@ $posts = mysqli_query($conn, $postsSql);
   </main>
 
   <script>window.isLoggedIn = <?= $sessUid ? 'true' : 'false' ?>;</script>
-  <script src="assets/js/communities.js?v=20251009"></script>
+  <script src="assets/js/communities.js?v=20251019"></script>
 </body>
 </html>

@@ -52,14 +52,31 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.trading-card').forEach((card) => {
     card.style.cursor = 'pointer';
     card.addEventListener('click', function (e) {
+      // If delete button clicked, don't open the view popup
+      if (e.target.closest && e.target.closest('.trading-delete-btn')) {
+        return;
+      }
+      // If edit button clicked, don't open the view popup
+      if (e.target.closest && e.target.closest('.trading-edit-btn')) {
+        return;
+      }
       // Prevent button click from triggering popup
       if (e.target.classList.contains('request-btn')) return;
       const img = card.querySelector('img').src;
       const title = card.querySelector('h2').textContent;
       const owner = card.querySelector('p').textContent;
+      const description =
+        card.dataset.description || 'No description available';
+      const dateAdded = card.dataset.dateadded || '';
+
       document.getElementById('trading-popup-img').src = img;
       document.getElementById('trading-popup-title').textContent = title;
+      document.getElementById('trading-popup-content').textContent =
+        description;
       document.getElementById('trading-popup-owner').textContent = owner;
+      document.getElementById('trading-popup-time').textContent = dateAdded
+        ? new Date(dateAdded).toLocaleString()
+        : 'Time Posted';
       const popup = document.getElementById('trading-popup');
       // store target info on popup for request action
       if (card.dataset) {
@@ -81,27 +98,12 @@ document.addEventListener('DOMContentLoaded', function () {
       popup.style.justifyContent = 'center';
       popup.style.background = 'rgba(0, 0, 0, 0.6)';
       popup.style.zIndex = '10000';
-      // Style the modal card content inline as a fallback
+      // Don't override the inline flex layout styles
       const content = popup.querySelector('.trading-popup-content');
       if (content) {
-        content.style.background = '#fff';
-        content.style.color = '#222';
-        content.style.borderRadius = '10px';
-        content.style.padding = '50px 20px 20px 20px';
-        content.style.maxWidth = '700px';
-        content.style.width = '90%';
         content.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
         content.style.position = 'relative';
-
-        const imgEl = content.querySelector('img');
-        if (imgEl) {
-          imgEl.style.width = '95%';
-          imgEl.style.height = '250px';
-          imgEl.style.objectFit = 'cover';
-          imgEl.style.borderRadius = '8px';
-          imgEl.style.display = 'block';
-          imgEl.style.margin = '0 auto 20px auto';
-        }
+        content.style.borderRadius = '10px';
       }
       // Prevent background scroll while popup is open
       document.body.style.overflow = 'hidden';
@@ -111,12 +113,12 @@ document.addEventListener('DOMContentLoaded', function () {
         popupBtn.style.display = 'inline-block';
         // reflect requested state in popup button
         const requested = card.dataset.requested === '1';
-        popupBtn.textContent = requested ? 'Request sent' : 'I want this';
+        popupBtn.textContent = requested ? 'Request sent' : 'Request';
         popupBtn.disabled = requested;
       }
     });
 
-    // Card button behavior handled by meetup modal logic below
+    // Card-level request button removed; actions are handled in the popup only
   });
   // Close popup
   document.querySelector('.trading-popup-close').onclick = function () {
@@ -330,4 +332,302 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   })();
+
+  // --- My Trades modal controls ---
+  (function () {
+    const modal = document.getElementById('my-trades-modal');
+    const closeBtn = document.getElementById('my-trades-close');
+
+    closeBtn?.addEventListener('click', () => {
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+  })();
+
+  // --- Filter and sort controls ---
+  (function () {
+    const sortBtn = document.getElementById('sort-btn');
+    const ascendingBtn = document.getElementById('ascending-btn');
+    const latestBtn = document.getElementById('latest-btn');
+    const viewTradesBtn = document.getElementById('view-my-trades');
+    const filterBtns = [sortBtn, ascendingBtn, latestBtn];
+
+    // Toggle active state
+    filterBtns.forEach((btn) => {
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        // Remove active from all
+        filterBtns.forEach((b) => b && b.classList.remove('active'));
+        // Add active to clicked
+        btn.classList.add('active');
+
+        // Apply sorting logic based on which button was clicked
+        if (btn === sortBtn) {
+          showToast('Sort options coming soon', 'info');
+        } else if (btn === ascendingBtn) {
+          sortCards('ascending');
+        } else if (btn === latestBtn) {
+          sortCards('latest');
+        }
+      });
+    });
+
+    // View current trades button
+    viewTradesBtn?.addEventListener('click', async () => {
+      await loadMyTrades();
+    });
+
+    async function loadMyTrades() {
+      const modal = document.getElementById('my-trades-modal');
+      const list = document.getElementById('my-trades-list');
+
+      if (!modal || !list) return;
+
+      // Show loading
+      list.innerHTML =
+        '<p style="text-align:center;color:#666;padding:20px">Loading your trades...</p>';
+      modal.style.display = 'flex';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.right = '0';
+      modal.style.bottom = '0';
+      modal.style.alignItems = 'center';
+      modal.style.justifyContent = 'center';
+      modal.style.background = 'rgba(0,0,0,.6)';
+      modal.style.zIndex = '10000';
+      document.body.style.overflow = 'hidden';
+
+      try {
+        const resp = await fetch('api/my_trades.php', {
+          credentials: 'include',
+        });
+
+        if (resp.status === 401) {
+          showToast('Please log in first', 'error');
+          modal.style.display = 'none';
+          document.body.style.overflow = '';
+          return;
+        }
+
+        const data = await resp.json();
+
+        if (data.ok && data.trades) {
+          if (data.trades.length === 0) {
+            list.innerHTML =
+              '<p style="text-align:center;color:#666;padding:20px">You haven\'t made any trade requests yet.</p>';
+          } else {
+            list.innerHTML = data.trades
+              .map((trade) => {
+                const statusColor =
+                  trade.Status === 'Pending'
+                    ? '#f0ad4e'
+                    : trade.Status === 'Accepted'
+                    ? '#5cb85c'
+                    : trade.Status === 'Declined'
+                    ? '#d9534f'
+                    : '#999';
+                const imgSrc =
+                  trade.ImagePath || 'https://placehold.co/600x400';
+                const desc = trade.Description || 'No description';
+
+                return `
+                <div style="display:flex;gap:12px;padding:12px;background:#f8f8f8;border-radius:8px;border-left:4px solid ${statusColor}">
+                  <img src="${imgSrc}" alt="Item" style="width:80px;height:80px;object-fit:cover;border-radius:6px;flex-shrink:0" />
+                  <div style="flex:1;min-width:0">
+                    <h4 style="margin:0 0 4px;font-size:1.1rem;color:#222">${trade.ItemName}</h4>
+                    <p style="margin:2px 0;font-size:0.85rem;color:#666">${desc}</p>
+                    <p style="margin:2px 0;font-size:0.85rem;color:#666">Owner: ${trade.OwnerName}</p>
+                    <p style="margin:6px 0 0;font-size:0.85rem;font-weight:600;color:${statusColor}">Status: ${trade.Status}</p>
+                  </div>
+                </div>
+              `;
+              })
+              .join('');
+          }
+        } else {
+          list.innerHTML =
+            '<p style="text-align:center;color:#d9534f;padding:20px">Failed to load trades.</p>';
+        }
+      } catch (err) {
+        list.innerHTML =
+          '<p style="text-align:center;color:#d9534f;padding:20px">Network error. Please try again.</p>';
+      }
+    }
+
+    function sortCards(type) {
+      const grid = document.querySelector('.trading-grid');
+      if (!grid) return;
+
+      const cards = Array.from(grid.querySelectorAll('.trading-card'));
+
+      if (type === 'latest') {
+        // Already sorted by DateAdded DESC from server
+        showToast('Showing latest items', 'success');
+      } else if (type === 'ascending') {
+        // Sort alphabetically by title
+        cards.sort((a, b) => {
+          const titleA = a.querySelector('h2')?.textContent.toLowerCase() || '';
+          const titleB = b.querySelector('h2')?.textContent.toLowerCase() || '';
+          return titleA.localeCompare(titleB);
+        });
+
+        // Re-append in new order
+        cards.forEach((card) => grid.appendChild(card));
+        showToast('Sorted A-Z', 'success');
+      }
+    }
+  })();
+
+  // Delete button handler for trading items
+  document.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.trading-delete-btn');
+    if (deleteBtn) {
+      e.stopPropagation();
+      const itemId = deleteBtn.dataset.itemid;
+
+      if (confirm('Are you sure you want to delete this trading item?')) {
+        fetch('api/trading_item.php', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_id: itemId }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.ok) {
+              const card = deleteBtn.closest('.trading-card');
+              if (card) card.remove();
+              showToast('Item deleted successfully', 'success');
+            } else {
+              showToast(data.error || 'Failed to delete item', 'error');
+            }
+          })
+          .catch((err) => {
+            console.error('Delete error:', err);
+            showToast('Error deleting item', 'error');
+          });
+      }
+    }
+
+    // Handle edit trading item
+    const editBtn = e.target.closest('.trading-edit-btn');
+    if (editBtn) {
+      e.stopPropagation();
+      const itemId = editBtn.dataset.itemid;
+      const card = editBtn.closest('.trading-card');
+      const currentName = card.querySelector('h2').textContent;
+      const currentDesc = card.dataset.description || '';
+      const currentCategory = card.dataset.category || '';
+      const currentLocation = card.dataset.meetuplocation || '';
+
+      // Open edit modal
+      openEditModal(
+        itemId,
+        currentName,
+        currentDesc,
+        currentCategory,
+        currentLocation
+      );
+    }
+  });
+
+  // Edit Item modal wires
+  const editModal = document.getElementById('edit-item-modal');
+  const editClose = document.getElementById('edit-item-close');
+  const editCancel = document.getElementById('edit-item-cancel');
+  const editSubmit = document.getElementById('edit-item-submit');
+  const editItemId = document.getElementById('edit-item-id');
+  const editName = document.getElementById('edit-name');
+  const editDesc = document.getElementById('edit-desc');
+  const editCategory = document.getElementById('edit-category');
+  const editLocation = document.getElementById('edit-location');
+  const editError = document.getElementById('edit-item-error');
+
+  function openEditModal(itemId, name, description, category, location) {
+    if (!editModal) return;
+    if (editItemId) editItemId.value = itemId;
+    if (editName) editName.value = name;
+    if (editDesc) editDesc.value = description;
+    if (editCategory) editCategory.value = category;
+    if (editLocation) editLocation.value = location;
+    if (editError) editError.style.display = 'none';
+    editModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEditModal() {
+    if (!editModal) return;
+    editModal.style.display = 'none';
+    document.body.style.overflow = '';
+    if (editItemId) editItemId.value = '';
+    if (editName) editName.value = '';
+    if (editDesc) editDesc.value = '';
+    if (editCategory) editCategory.value = '';
+    if (editLocation) editLocation.value = '';
+    if (editError) editError.style.display = 'none';
+  }
+
+  if (editClose) editClose.addEventListener('click', closeEditModal);
+  if (editCancel) editCancel.addEventListener('click', closeEditModal);
+
+  async function updateItem() {
+    const itemId = editItemId?.value || '';
+    const name = (editName?.value || '').trim();
+    const description = (editDesc?.value || '').trim();
+    const category = (editCategory?.value || '').trim();
+    const meetupLocation = (editLocation?.value || '').trim();
+
+    if (!itemId || !name || !description || !meetupLocation) {
+      if (editError) {
+        editError.textContent = 'Please fill in all required fields';
+        editError.style.display = 'block';
+      }
+      return;
+    }
+
+    try {
+      const res = await fetch('api/trading_item.php', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          item_id: itemId,
+          name: name,
+          description: description,
+          category: category,
+          meetup_location: meetupLocation,
+        }),
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        if (editError) {
+          editError.textContent = data.error || 'Failed to update item';
+          editError.style.display = 'block';
+        }
+        return;
+      }
+
+      showToast('Item updated successfully', 'success');
+      closeEditModal();
+
+      // Reload page to show updated data
+      setTimeout(() => location.reload(), 500);
+    } catch (err) {
+      if (editError) {
+        editError.textContent = 'Network error';
+        editError.style.display = 'block';
+      }
+    }
+  }
+
+  if (editSubmit) editSubmit.addEventListener('click', updateItem);
 });

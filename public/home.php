@@ -69,13 +69,14 @@ if (isset($conn)) {
   <title>Home Page</title>
 
   <!-- Navbar CSS -->
-  <link rel="stylesheet" href="assets/css/navbar.css">
+  <link rel="stylesheet" href="assets/css/navbar.css?v=20251020c">
+  <link rel="stylesheet" href="assets/css/theme.css?v=20251018">
 
   <!-- Home Page CSS -->
   <link rel="stylesheet" href="assets/css/home.css">
 
   <!-- JS -->
-  <script src="assets/js/navbar.js" defer></script>
+  <script src="assets/js/navbar.js?v=20251020" defer></script>
 </head>
 <body>
 

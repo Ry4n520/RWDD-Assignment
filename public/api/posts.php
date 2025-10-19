@@ -1,10 +1,135 @@
 <?php
 // POST /api/posts.php -> create a post
+// PUT /api/posts.php -> edit a post
+// DELETE /api/posts.php -> delete a post
 header('Content-Type: application/json');
 session_start();
 include __DIR__ . '/../../src/db.php';
 // allow anonymous posting (no login required)
 $userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
+
+// Handle PUT request (edit post)
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    if (!$userId) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'Not logged in']);
+        exit;
+    }
+    
+    // Check if user is admin
+    $isAdmin = false;
+    $userStmt = mysqli_prepare($conn, "SELECT usertype FROM accounts WHERE UserID = ? LIMIT 1");
+    mysqli_stmt_bind_param($userStmt, 'i', $userId);
+    mysqli_stmt_execute($userStmt);
+    $userRes = mysqli_stmt_get_result($userStmt);
+    if ($userRow = mysqli_fetch_assoc($userRes)) {
+        if (isset($userRow['usertype']) && strtolower($userRow['usertype']) === 'admin') {
+            $isAdmin = true;
+        }
+    }
+    
+    $input = json_decode(file_get_contents('php://input'), true);
+    $postId = intval($input['post_id'] ?? 0);
+    $newContent = trim($input['content'] ?? '');
+    
+    if (!$postId || !$newContent) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Invalid input']);
+        exit;
+    }
+    
+    // Check ownership (admins can edit any post)
+    if (!$isAdmin) {
+        $stmt = mysqli_prepare($conn, "SELECT UserID FROM posts WHERE PostID = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $postId);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $post = mysqli_fetch_assoc($res);
+        
+        if (!$post || intval($post['UserID']) !== intval($userId)) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Not authorized']);
+            exit;
+        }
+    }
+    
+    // Update post
+    $stmt = mysqli_prepare($conn, "UPDATE posts SET Content = ? WHERE PostID = ?");
+    mysqli_stmt_bind_param($stmt, 'si', $newContent, $postId);
+    
+    if (mysqli_stmt_execute($stmt)) {
+        echo json_encode(['ok' => true]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'Failed to update post']);
+    }
+    exit;
+}
+
+// Handle DELETE request (delete post)
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    if (!$userId) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'Not logged in']);
+        exit;
+    }
+    
+    // Check if user is admin
+    $isAdmin = false;
+    $userStmt = mysqli_prepare($conn, "SELECT usertype FROM accounts WHERE UserID = ? LIMIT 1");
+    mysqli_stmt_bind_param($userStmt, 'i', $userId);
+    mysqli_stmt_execute($userStmt);
+    $userRes = mysqli_stmt_get_result($userStmt);
+    if ($userRow = mysqli_fetch_assoc($userRes)) {
+        if (isset($userRow['usertype']) && strtolower($userRow['usertype']) === 'admin') {
+            $isAdmin = true;
+        }
+    }
+    
+    $input = json_decode(file_get_contents('php://input'), true);
+    $postId = intval($input['post_id'] ?? 0);
+    
+    if (!$postId) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Invalid input']);
+        exit;
+    }
+    
+    // Check ownership (admins can delete any post)
+    if (!$isAdmin) {
+        $stmt = mysqli_prepare($conn, "SELECT UserID FROM posts WHERE PostID = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $postId);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $post = mysqli_fetch_assoc($res);
+        
+        if (!$post || intval($post['UserID']) !== intval($userId)) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Not authorized']);
+            exit;
+        }
+    }
+    
+    // Delete post images from disk and DB
+    $imgRes = mysqli_query($conn, "SELECT path FROM post_images WHERE PostID = " . $postId);
+    if ($imgRes) {
+        while ($img = mysqli_fetch_assoc($imgRes)) {
+            $filePath = __DIR__ . '/../../public/' . ltrim($img['path'], '/');
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
+        mysqli_query($conn, "DELETE FROM post_images WHERE PostID = " . $postId);
+    }
+    
+    // Delete comments, likes, and the post
+    mysqli_query($conn, "DELETE FROM comments WHERE PostID = " . $postId);
+    mysqli_query($conn, "DELETE FROM postlikes WHERE PostID = " . $postId);
+    mysqli_query($conn, "DELETE FROM posts WHERE PostID = " . $postId);
+    
+    echo json_encode(['ok' => true]);
+    exit;
+}
 
 // helper: resize an image file to fit within max dimensions using GD
 if (!function_exists('resize_image')) {
