@@ -41,6 +41,11 @@ if ($conn) {
   <main class="events-page">
     <h1>Community Events</h1>
     <p>Discover upcoming events in your communities.</p>
+    
+      <!-- Admin: Post Event trigger (no role check yet) -->
+      <div style="margin:12px 0 20px; display:flex; justify-content:flex-end">
+        <button id="event-post-open" class="join-btn">Post an event</button>
+      </div>
 
     <section class="events-grid">
       <?php if ($result && mysqli_num_rows($result) > 0): ?>
@@ -91,6 +96,29 @@ if ($conn) {
     </div>
   </div>
 
-  <script src="assets/js/events.js?v=20251017"></script>
+  <!-- Post Event modal -->
+  <div id="post-event-modal" class="event-popup" style="display:none">
+    <div class="event-popup-content" style="max-width:560px">
+      <span class="event-popup-close" id="event-post-close" style="position:absolute;top:10px;right:18px;font-size:2rem;cursor:pointer">&times;</span>
+      <h3>Post an event</h3>
+      <label for="post-event-name">Event name</label>
+      <input id="post-event-name" type="text" placeholder="Enter event name" style="width:100%;padding:8px;margin:6px 0 12px" />
+      <label for="post-event-address">Address</label>
+      <input id="post-event-address" type="text" placeholder="Enter address/location" style="width:100%;padding:8px;margin:6px 0 12px" />
+      <label for="post-event-date">Date</label>
+      <input id="post-event-date" type="date" style="width:100%;padding:8px;margin:6px 0 12px" />
+      <label for="post-event-organizer">Organizer</label>
+      <input id="post-event-organizer" type="text" placeholder="Organizer name" style="width:100%;padding:8px;margin:6px 0 12px" />
+      <label for="post-event-images">Images</label>
+      <input id="post-event-images" type="file" accept="image/*" multiple style="width:100%;padding:8px;margin:6px 0 12px;background:#f6f6f6;border-radius:6px" />
+      <div id="post-event-images-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+        <button id="event-post-cancel" type="button">Cancel</button>
+        <button id="event-post-submit" class="join-btn" type="button">Publish</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/events.js?v=20251019"></script>
 </body>
 </html>

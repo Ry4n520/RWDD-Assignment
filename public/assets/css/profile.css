@@ -75,6 +75,7 @@
   height: 32px;
   border-radius: 6px;
   background: var(--hover-color);
+}
 .bio {
   margin: 10px 0;
 }
