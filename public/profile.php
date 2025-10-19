@@ -140,11 +140,12 @@ if (!empty($profileAccountId) && isset($conn)) {
 
   <!-- CSS -->
   <link rel="stylesheet" href="assets/css/navbar.css">
-  <link rel="stylesheet" href="assets/css/profile.css">
+  <link rel="stylesheet" href="assets/css/theme.css?v=20251018">
+  <link rel="stylesheet" href="assets/css/profile.css?v=20251017">
   <link rel="stylesheet" href="assets/css/communities.css">
 
   <!-- JS -->
-  <script src="assets/js/navbar.js" defer></script>
+  <script src="assets/js/navbar.js?v=20251018" defer></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -185,7 +186,13 @@ if (!empty($profileAccountId) && isset($conn)) {
     <section class="user-activity">
       <h3>Notifications</h3>
       <div class="notifications-controls">
-        <button id="markAllNotifications" class="btn">Mark all read</button>
+        <div class="notif-tabs">
+          <ul style="list-style:none; padding:0; margin:0;">
+            <li><a href="#" id="tabUnread" class="notif-tab-link active-link">Unread</a></li>
+            <li><a href="#" id="tabRead" class="notif-tab-link">Read</a></li>
+          </ul>
+        </div>
+        <button id="markAllNotifications" class="btn" type="button">Mark all read</button>
       </div>
       <div id="notificationsList" class="notifications-list">
         <!-- notifications will be loaded here by assets/js/notifications.js -->
@@ -225,7 +232,7 @@ if (!empty($profileAccountId) && isset($conn)) {
 
   <script src="assets/js/profile-edit.js" defer></script>
   <script src="assets/js/communities.js" defer></script>
-  <script src="assets/js/notifications.js" defer></script>
+  <script src="assets/js/notifications.js?v=20251018" defer></script>
   <script>
     // ensure carousel is initialized on profile posts after communities.js loads
     document.addEventListener('DOMContentLoaded', function () {

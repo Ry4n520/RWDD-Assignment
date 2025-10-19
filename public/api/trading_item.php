@@ -1,7 +1,7 @@
 <?php
 /**
- * Simple API to create trading list items
- * POST fields: name, category, description (optional)
+ * Create trading list items
+ * POST fields: name (required), category (optional), description (optional), meetup_location (optional)
  */
 session_start();
 header('Content-Type: application/json');
@@ -15,14 +15,37 @@ if (!$me) { http_response_code(401); echo json_encode(['ok'=>false,'error'=>'not
 $name = trim($_POST['name'] ?? '');
 $category = trim($_POST['category'] ?? '');
 $desc = trim($_POST['description'] ?? '');
+$meetup = trim($_POST['meetup_location'] ?? '');
 if ($name === '') { echo json_encode(['ok'=>false,'error'=>'name_required']); exit; }
 
-// match existing table name `tradinglist`
-$stmt = mysqli_prepare($conn, "INSERT INTO tradinglist (UserID,Name,Category) VALUES (?,?,?)");
-mysqli_stmt_bind_param($stmt,'iss',$me,$name,$category);
-mysqli_stmt_execute($stmt);
+// Insert into `tradinglist`, prefer extended columns when available
+$id = 0;
+$stmt = mysqli_prepare($conn, "INSERT INTO tradinglist (UserID,Name,Category,Description,MeetupLocation) VALUES (?,?,?,?,?)");
+if ($stmt) {
+	mysqli_stmt_bind_param($stmt,'issss',$me,$name,$category,$desc,$meetup);
+	if (!mysqli_stmt_execute($stmt)) {
+		// fall back to (UserID,Name,Category,Description)
+		mysqli_stmt_close($stmt);
+		$stmt = mysqli_prepare($conn, "INSERT INTO tradinglist (UserID,Name,Category,Description) VALUES (?,?,?,?)");
+		if ($stmt) {
+			mysqli_stmt_bind_param($stmt,'isss',$me,$name,$category,$desc);
+			if (!mysqli_stmt_execute($stmt)) {
+				mysqli_stmt_close($stmt);
+				// fall back to legacy minimal columns
+				$stmt = mysqli_prepare($conn, "INSERT INTO tradinglist (UserID,Name,Category) VALUES (?,?,?)");
+				mysqli_stmt_bind_param($stmt,'iss',$me,$name,$category);
+				mysqli_stmt_execute($stmt);
+			}
+		}
+	}
+} else {
+	// prepare failed for extended; use minimal
+	$stmt = mysqli_prepare($conn, "INSERT INTO tradinglist (UserID,Name,Category) VALUES (?,?,?)");
+	mysqli_stmt_bind_param($stmt,'iss',$me,$name,$category);
+	mysqli_stmt_execute($stmt);
+}
 $id = mysqli_insert_id($conn);
-mysqli_stmt_close($stmt);
+if ($stmt) mysqli_stmt_close($stmt);
 
 echo json_encode(['ok'=>true,'item_id'=>$id]);
 

@@ -84,6 +84,14 @@
   background-color: #3498db;
 }
 
+/* Leave state is red */
+.join-btn.leave {
+  background-color: #dc3545; /* Bootstrap danger */
+}
+.join-btn.leave:hover {
+  background-color: #b02a37; /* darker on hover */
+}
+
 /* Popup */
 .event-popup {
   position: fixed !important;
@@ -140,6 +148,14 @@
 
 #event-popup-action-btn:hover {
   background-color: #3498db;
+}
+
+/* Popup leave variant */
+#event-popup-action-btn.leave {
+  background-color: #dc3545;
+}
+#event-popup-action-btn.leave:hover {
+  background-color: #b02a37;
 }
 
 .event-popup-close {
