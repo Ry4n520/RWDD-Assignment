@@ -1,9 +1,9 @@
 <?php
+include '../src/auth.php';
 // Simplified communities.php - show posts and comment counts; no auth checks
 include __DIR__ . '/../src/db.php';
 
 // determine composer avatar from logged-in user (if any)
-session_start();
 $composerAvatar = 'assets/images/default-profile.jpg';
 $sessUid = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
 // integer session uid for SQL

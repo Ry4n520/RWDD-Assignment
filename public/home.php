@@ -1,6 +1,5 @@
-<?php /* include '../src/auth.php'; */
+<?php include '../src/auth.php';
 // Dynamic homepage: fetch latest trading item, event, and community post
-session_start();
 include __DIR__ . '/../src/db.php';
 
 $currentUserId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
