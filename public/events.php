@@ -56,10 +56,12 @@ if ($conn) {
     <h1>Community Events</h1>
     <p>Discover upcoming events in your communities.</p>
     
-      <!-- Admin: Post Event trigger (no role check yet) -->
-      <div style="margin:12px 0 20px; display:flex; justify-content:flex-end">
-        <button id="event-post-open" class="join-btn">Post an event</button>
-      </div>
+      <!-- Admin: Post Event trigger (admin only) -->
+      <?php if ($isAdmin): ?>
+        <div style="margin:12px 0 20px; display:flex; justify-content:flex-end">
+          <button id="event-post-open" class="join-btn">Post an event</button>
+        </div>
+      <?php endif; ?>
 
     <section class="events-grid">
       <?php if ($result && mysqli_num_rows($result) > 0): ?>

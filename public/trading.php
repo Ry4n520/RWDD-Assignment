@@ -45,9 +45,9 @@ $meetupLocations = ['Community Center', 'City Park', 'Main Street Cafe', 'Librar
     <title>Trading</title>
     <link rel="stylesheet" href="assets/css/navbar.css?v=20251020e" />
     <link rel="stylesheet" href="assets/css/theme.css?v=20251020c" />
-    <link rel="stylesheet" href="assets/css/trading.css?v=20251020h" />
+    <link rel="stylesheet" href="assets/css/trading.css?v=20251020p" />
     <script src="assets/js/navbar.js?v=20251020" defer></script>
-    <script src="assets/js/trading.js?v=20251020h" defer></script>
+    <script src="assets/js/trading.js?v=20251020q" defer></script>
   </head>
   <body>
     <?php include 'includes/header.php'; ?>
@@ -59,7 +59,6 @@ $meetupLocations = ['Community Center', 'City Park', 'Main Street Cafe', 'Librar
       <!-- Filter and action controls -->
       <div class="trading-controls">
         <div class="trading-filters">
-          <button class="filter-btn" id="sort-btn">Sort</button>
           <button class="filter-btn" id="ascending-btn">
             <span>▲</span> Ascending
           </button>
@@ -210,6 +209,6 @@ $meetupLocations = ['Community Center', 'City Park', 'Main Street Cafe', 'Librar
     </div>
   </div>
 
-    <script src="assets/js/trading.js?v=20251020h"></script>
+    <script src="assets/js/trading.js?v=20251020q"></script>
   </body>
 </html>

@@ -355,11 +355,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // --- Filter and sort controls ---
   (function () {
-    const sortBtn = document.getElementById('sort-btn');
     const ascendingBtn = document.getElementById('ascending-btn');
     const latestBtn = document.getElementById('latest-btn');
     const viewTradesBtn = document.getElementById('view-my-trades');
-    const filterBtns = [sortBtn, ascendingBtn, latestBtn];
+    const filterBtns = [ascendingBtn, latestBtn];
 
     // Toggle active state
     filterBtns.forEach((btn) => {
@@ -371,9 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.classList.add('active');
 
         // Apply sorting logic based on which button was clicked
-        if (btn === sortBtn) {
-          showToast('Sort options coming soon', 'info');
-        } else if (btn === ascendingBtn) {
+        if (btn === ascendingBtn) {
           sortCards('ascending');
         } else if (btn === latestBtn) {
           sortCards('latest');
@@ -471,7 +468,15 @@ document.addEventListener('DOMContentLoaded', function () {
       const cards = Array.from(grid.querySelectorAll('.trading-card'));
 
       if (type === 'latest') {
-        // Already sorted by DateAdded DESC from server
+        // Sort by DateAdded DESC (newest first)
+        cards.sort((a, b) => {
+          const dateA = new Date(a.dataset.dateadded || 0);
+          const dateB = new Date(b.dataset.dateadded || 0);
+          return dateB - dateA; // Descending order (newest first)
+        });
+
+        // Re-append in new order
+        cards.forEach((card) => grid.appendChild(card));
         showToast('Showing latest items', 'success');
       } else if (type === 'ascending') {
         // Sort alphabetically by title

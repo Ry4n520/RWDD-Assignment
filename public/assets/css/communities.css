@@ -2,11 +2,16 @@
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
+  overflow-x: hidden; /* prevent horizontal scroll */
 }
 
 /* Composer (top box styled like the screenshot) */
 .composer {
   margin-bottom: 18px;
+  position: relative;
+  z-index: 1; /* ensure composer stays above other content but below sidebar */
+  width: 100%; /* ensure composer doesn't exceed container */
+  box-sizing: border-box;
 }
 
 /* Composer: vertical layout like Reddit */
@@ -41,6 +46,8 @@
   flex-direction: column;
   gap: 8px;
   flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Title and file input styles */
@@ -56,6 +63,7 @@
 /* Input: compact single-line appearance (use textarea but forced height) */
 .composer-input {
   width: 100%;
+  max-width: 100%;
   min-height: 90px;
   padding: 10px 12px;
   border-radius: 8px;
@@ -66,6 +74,7 @@
   line-height: 1.1;
   resize: vertical; /* allow vertical resize if user needs more space */
   box-shadow: none;
+  box-sizing: border-box;
 }
 
 /* file row and actions aligned */
@@ -92,6 +101,8 @@
   border-radius: 8px;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 1;
 }
 #postButton:hover {
   background: #005fd6;
@@ -175,6 +186,9 @@
 
 /* Responsive: keep layout comfortable on small screens */
 @media (max-width: 900px) {
+  .communities-page {
+    padding: 10px;
+  }
   .composer-top {
     flex-direction: row;
     gap: 12px;
@@ -185,7 +199,20 @@
     height: 48px;
   }
   .composer-input {
-    min-height: 120px;
+    min-height: 80px;
+    font-size: 13px;
+  }
+  .composer-form {
+    padding: 12px;
+  }
+  .composer-file-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #postButton {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 4px;
   }
 }
 
@@ -373,13 +400,21 @@ h1 {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 50; /* ensure arrows are above images */
+  z-index: 5; /* below sidebar (z-index: 10) so they don't show through */
 }
 .post .post-images.carousel .carousel-prev {
   left: 8px;
 }
 .post .post-images.carousel .carousel-next {
   right: 8px;
+}
+
+/* Hide carousel arrows when sidebar is open on mobile */
+@media screen and (max-width: 500px) {
+  nav.show ~ * .post .post-images.carousel .carousel-prev,
+  nav.show ~ * .post .post-images.carousel .carousel-next {
+    display: none;
+  }
 }
 
 /* If you have multiple images per post, show them as a grid on wider screens */

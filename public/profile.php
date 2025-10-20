@@ -4,6 +4,20 @@ session_start();
 include __DIR__ . '/../src/db.php';
 
 $userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
+$userId = $userId ? (int)$userId : 0;
+
+// Check if user is admin
+$isAdmin = false;
+if ($userId) {
+  $r = mysqli_query($conn, "SELECT usertype FROM accounts WHERE UserID = " . $userId . " LIMIT 1");
+  if ($r && mysqli_num_rows($r) > 0) {
+    $row = mysqli_fetch_assoc($r);
+    if (isset($row['usertype']) && strtolower($row['usertype']) === 'admin') {
+      $isAdmin = true;
+    }
+  }
+}
+
 $user = [
   'username' => 'Username',
   'bio' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vel sem vel odio cursus feugiat.',
