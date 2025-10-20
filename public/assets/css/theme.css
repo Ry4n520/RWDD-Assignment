@@ -1,0 +1,40 @@
+:root {
+  /* Default (dark) theme variables */
+  --primary-color: #11121a;
+  --hover-color: #272832;
+  --accent-color: #0071ff;
+  --text-color: #c9c9c9;
+  --card-bg: #1b2330;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --muted-text: #a7b6c2;
+}
+
+/* Dark theme explicit */
+:root[data-theme='dark'] {
+  --primary-color: #11121a;
+  --hover-color: #272832;
+  --accent-color: #0071ff;
+  --text-color: #cfd8dc;
+  --card-bg: #1b2330;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --muted-text: #a7b6c2;
+}
+
+/* Light theme */
+:root[data-theme='light'] {
+  --primary-color: #ffffff;
+  --hover-color: #f1f3f5;
+  --accent-color: #0061d6;
+  --text-color: #1f2937;
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.06);
+  --muted-text: #4b5563;
+}
+
+/* Optional: transition for smooth theme change */
+html,
+body,
+body * {
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease;
+}

@@ -1,98 +1,142 @@
-<?php /* include '../src/auth.php'; */?>
+<?php
+// Simplified communities.php - show posts and comment counts; no auth checks
+include __DIR__ . '/../src/db.php';
 
+// determine composer avatar from logged-in user (if any)
+session_start();
+$composerAvatar = 'assets/images/default-profile.jpg';
+$sessUid = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
+// integer session uid for SQL
+$sessUidInt = $sessUid ? intval($sessUid) : 0;
+$isAdmin = false;
+if ($sessUid) {
+  $u = intval($sessUid);
+  $r = mysqli_query($conn, "SELECT profile_picture, usertype FROM accounts WHERE UserID = " . $u . " LIMIT 1");
+  if ($r && mysqli_num_rows($r) > 0) {
+    $row = mysqli_fetch_assoc($r);
+    if (!empty($row['profile_picture'])) $composerAvatar = $row['profile_picture'];
+    // Check if user is admin (usertype could be 'admin', 'Admin', or is_admin = 1)
+    if (isset($row['usertype']) && strtolower($row['usertype']) === 'admin') $isAdmin = true;
+  }
+}
 
-<!DOCTYPE html>
+// Fetch posts with like count and comment count
+$postsSql = "
+  SELECT p.PostID, p.Content, p.Title, p.Created_at, p.UserID, a.username,
+    (SELECT COUNT(*) FROM postlikes pl WHERE pl.PostID = p.PostID) AS like_count,
+    (SELECT COUNT(*) FROM comments c WHERE c.PostID = p.PostID) AS comment_count,
+  (SELECT GROUP_CONCAT(path SEPARATOR '||') FROM post_images pi WHERE pi.PostID = p.PostID ORDER BY pi.id ASC) AS images
+  FROM posts p
+  JOIN accounts a ON p.UserID = a.UserID
+  ORDER BY p.Created_at DESC
+";
+$posts = mysqli_query($conn, $postsSql);
+?>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Communities</title>
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/navbar.css?v=20251006">
-  <link rel="stylesheet" href="assets/css/communities.css?v=20251006">
-
-  <!-- JS -->
-  <script src="assets/js/navbar.js?v=20251006" defer></script>
+  <?php $cssVer = file_exists(__DIR__ . '/assets/css/communities.css') ? filemtime(__DIR__ . '/assets/css/communities.css') : time(); ?>
+  <link rel="stylesheet" href="assets/css/navbar.css?v=20251020c">
+  <link rel="stylesheet" href="assets/css/theme.css?v=20251018">
+  <link rel="stylesheet" href="assets/css/communities.css?v=<?= $cssVer ?>">
+  <script src="assets/js/navbar.js?v=20251020" defer></script>
 </head>
 <body>
-  <!-- Navbar -->
   <?php include 'includes/header.php'; ?>
 
-  <!-- Main Content -->
   <main class="communities-page">
-    <h1>Community Posts</h1>
+    <!-- Composer: title, content, images, post button -->
+    <section class="composer">
+      <form id="postForm" class="composer-form" enctype="multipart/form-data" novalidate>
+        <div class="composer-top">
+          <img class="composer-avatar" src="<?= htmlspecialchars($composerAvatar) ?>" alt="avatar">
+          <div class="composer-fields">
+            <textarea name="content" id="postContent" class="composer-input" placeholder="Share something with the community..." rows="4" required></textarea>
 
-    <!-- New Post Form -->
-    <section class="new-post">
-      <form action="" method="post">
-        <textarea name="postContent" placeholder="Share something with the community..." required></textarea>
-        <button type="submit">Post</button>
+            <div class="composer-file-row">
+              <input id="postFiles" name="images[]" class="composer-files" type="file" accept="image/*" multiple>
+              <div class="composer-actions">
+                <button type="submit" id="postButton">Post</button>
+              </div>
+            </div>
+
+            <div id="filePreview" class="file-preview" aria-hidden="true"></div>
+            <div id="composerMessage" class="composer-message" aria-hidden="true"></div>
+          </div>
+        </div>
       </form>
     </section>
 
-    <!-- Posts Section -->
     <section class="posts">
-      <!-- Example Post -->
-      <article class="post">
-        <div class="post-header">
-          <h2>User123</h2>
-          <span class="time">2 hours ago</span>
-        </div>
-        <p class="post-content">
-          Does anyone know when the next trading meetup is happening?
-        </p>
-        <div class="post-actions">
-          <button>👍 12</button>
-          <button>💬 5</button>
-        </div>
-
-        <!-- Comments -->
-        <div class="comments">
-          <div class="comment">
-            <span class="comment-user">TraderMike:</span>
-            <p>It’s on 25th Sept at the cafeteria.</p>
-          </div>
-          <div class="comment">
-            <span class="comment-user">Anna:</span>
-            <p>Thanks for asking, I was wondering too!</p>
-          </div>
-
-          <!-- Add Comment -->
-          <form class="add-comment" action="" method="post">
-            <input type="text" name="comment" placeholder="Write a comment..." required>
-            <button type="submit">Reply</button>
-          </form>
-        </div>
-      </article>
-
-      <!-- Another Example Post -->
-      <article class="post">
-        <div class="post-header">
-          <h2>Ashley</h2>
-          <span class="time">5 hours ago</span>
-        </div>
-        <p class="post-content">
-          I’m organizing a coding workshop next week, anyone interested?
-        </p>
-        <div class="post-actions">
-          <button>👍 8</button>
-          <button>💬 2</button>
-        </div>
-
-        <div class="comments">
-          <div class="comment">
-            <span class="comment-user">Ryan:</span>
-            <p>Count me in!</p>
-          </div>
-
-          <form class="add-comment" action="" method="post">
-            <input type="text" name="comment" placeholder="Write a comment..." required>
-            <button type="submit">Reply</button>
-          </form>
-        </div>
-      </article>
+      <?php if ($posts && mysqli_num_rows($posts) > 0): ?>
+        <?php while ($post = mysqli_fetch_assoc($posts)): ?>
+          <?php
+            // determine whether current user liked this post (if logged in)
+            $liked = false;
+            if ($sessUidInt) {
+              $check = mysqli_query($conn, "SELECT 1 FROM postlikes WHERE PostID = " . intval($post['PostID']) . " AND UserID = " . $sessUidInt . " LIMIT 1");
+              if ($check && mysqli_num_rows($check) > 0) $liked = true;
+            }
+          ?>
+          <article class="post" data-postid="<?= $post['PostID'] ?>">
+            <div class="post-header">
+              <h3 class="post-title"><?= htmlspecialchars($post['username']) ?></h3>
+              <div class="post-meta">
+                <span class="time"><?= htmlspecialchars($post['Created_at']) ?></span>
+                <?php if ($sessUidInt && ($isAdmin || $sessUidInt == intval($post['UserID']))): ?>
+                  <div class="post-menu">
+                    <button type="button" class="post-menu-btn" aria-label="Post options" aria-haspopup="true">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="2"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="12" cy="19" r="2"/>
+                      </svg>
+                    </button>
+                    <div class="post-menu-dropdown" aria-hidden="true">
+                      <button type="button" class="menu-item edit-post" data-postid="<?= $post['PostID'] ?>">Edit</button>
+                      <button type="button" class="menu-item delete-post" data-postid="<?= $post['PostID'] ?>">Delete</button>
+                    </div>
+                  </div>
+                <?php endif; ?>
+              </div>
+            </div>
+            <p class="post-content"><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
+            <div class="post-actions">
+              <button type="button" class="like-btn<?= $liked ? ' liked' : '' ?>" data-type="post" data-id="<?= $post['PostID'] ?>" data-liked="<?= $liked ? '1' : '0' ?>" aria-pressed="<?= $liked ? 'true' : 'false' ?>">👍 <?= intval($post['like_count']) ?></button>
+              <button type="button" class="comment-toggle" data-target="#comments-<?= $post['PostID'] ?>">💬 <?= intval($post['comment_count']) ?></button>
+            </div>
+            <div class="post-images">
+              <?php
+                if (!empty($post['images'])) {
+                  // images may be returned as a GROUP_CONCAT string separated by '||' or as an array (API responses)
+                  if (is_array($post['images'])) {
+                    $imgs = $post['images'];
+                  } else {
+                    $imgs = explode('||', $post['images']);
+                  }
+                  foreach ($imgs as $img) {
+                    $img = trim($img);
+                    if ($img === '') continue;
+                    // ensure safe output
+                    $src = htmlspecialchars($img);
+                    echo "<img src=\"{$src}\" class=\"post-image\" alt=\"post image\">";
+                  }
+                }
+              ?>
+            </div>
+            <div class="comments" id="comments-<?= $post['PostID'] ?>" aria-hidden="true"></div>
+          </article>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <p>No posts yet — be the first to post!</p>
+      <?php endif; ?>
     </section>
   </main>
+
+  <script>window.isLoggedIn = <?= $sessUid ? 'true' : 'false' ?>;</script>
+  <script src="assets/js/communities.js?v=20251019"></script>
 </body>
 </html>

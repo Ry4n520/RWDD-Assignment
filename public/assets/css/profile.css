@@ -2,7 +2,7 @@
   max-width: 900px;
   margin: 20px auto;
   padding: 20px;
-  color: #fff;
+  color: var(--text-color);
 }
 
 .profile-header {
@@ -10,7 +10,7 @@
   gap: 20px;
   align-items: flex-start;
   margin-bottom: 30px;
-  background: #1e1e2f;
+  background: var(--card-bg);
   padding: 20px;
   border-radius: 12px;
 }
@@ -24,15 +24,57 @@
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 10px;
-  border: 3px solid #4cafef;
+  border: 3px solid var(--accent-color);
 }
+/* avatar uploader overlay */
+.avatar-uploader {
+  position: relative;
+  display: inline-block;
+}
+.avatar-edit {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.avatar-uploader:hover .avatar-edit,
+.avatar-edit:focus {
+  opacity: 1;
+}
+.avatar-edit .edit-icon {
+  color: #fff;
+  font-size: 14px;
+}
+
+/* Edit overlay is visible on hover (default behavior restored) */
 .profile-details {
   flex: 1;
 }
-.profile-details h2 {
+.profile-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+.profile-top h2 {
+  margin: 0;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--hover-color);
 }
 .bio {
   margin: 10px 0;
@@ -42,8 +84,8 @@
 }
 
 .edit-btn {
-  background: #4cafef;
-  color: #fff;
+  background: var(--accent-color);
+  color: var(--primary-color);
   border: none;
   border-radius: 6px;
   padding: 4px 8px;
@@ -51,7 +93,41 @@
   cursor: pointer;
 }
 .edit-btn:hover {
-  background: #3498db;
+  background: color-mix(in oklab, var(--accent-color) 85%, black);
+}
+
+/* logout placement */
+.logout-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin: 16px 0;
+}
+.logout-btn {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.logout-btn:hover {
+  background: var(--hover-color);
+}
+
+/* slightly reduce avatar size on small screens */
+@media screen and (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+  }
+  .profile-picture img {
+    width: 96px;
+    height: 96px;
+  }
+  .profile-details {
+    text-align: center;
+  }
 }
 
 /* User Activity */
@@ -62,15 +138,219 @@
   padding-bottom: 5px;
 }
 
-.posts, .comments {
+/* Notifications styling */
+.notifications-controls {
+  margin: 10px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.notifications-list h4 {
+  margin: 8px 0 6px;
+  font-size: 1rem;
+  color: #cfd8dc;
+}
+.notifications-unread,
+.notifications-read {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notification {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+.notification.read {
+  opacity: 0.7;
+}
+.notif-head {
+  font-size: 0.78rem;
+  color: var(--muted-text);
+  margin-bottom: 4px;
+}
+.notif-body {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  color: var(--text-color);
+}
+.notif-actions {
+  display: flex;
+  gap: 8px;
+}
+.notif-extra {
+  font-size: 0.85rem;
+  color: var(--muted-text);
+}
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  border: 1px solid transparent;
+  background: var(--hover-color);
+  color: var(--text-color);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.notif-tabs ul {
+  list-style: none;
+  display: flex;
+  gap: 0;
+  margin: 0 0 10px 0;
+  padding: 0;
+  border-bottom: 1px solid var(--hover-color, #272832);
+}
+.notif-tabs {
+  flex: 1 1 auto;
+}
+.notif-tabs li {
+  display: flex;
+  flex: 1 1 0;
+}
+.notif-tabs a {
+  display: flex;
+  text-decoration: none !important;
+  color: var(--text-color, #c9c9c9) !important;
+  padding: 0.6em 1.2em;
+  transition: background-color 150ms ease;
+  width: 100%;
+  justify-content: center;
+}
+.notif-tabs a:hover {
+  background-color: var(--hover-color, #272832);
+}
+.notif-tabs a.active-link {
+  border-bottom: 2px solid var(--accent-color, #0071ff);
+}
+.btn:hover {
+  background: color-mix(in oklab, var(--hover-color) 85%, black);
+}
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+}
+.btn-outline {
+  background: transparent;
+  border-color: var(--card-border);
+  color: var(--text-color);
+}
+.btn-outline:hover {
+  background: var(--hover-color);
+}
+.btn-primary {
+  background: var(--accent-color);
+  color: var(--primary-color);
+  border-color: transparent;
+}
+.btn-primary:hover {
+  background: color-mix(in oklab, var(--accent-color) 90%, black);
+}
+.btn-danger {
+  background: #ef5350;
+  color: #fff;
+  border-color: transparent;
+}
+.btn-danger:hover {
+  background: #e53935;
+}
+
+.posts,
+.comments {
   margin-top: 15px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.post, .comment {
-  background: #2c2c3e;
+.post,
+.comment {
+  background: var(--card-bg);
   padding: 12px 16px;
   border-radius: 8px;
+  border: 1px solid var(--card-border);
+}
+
+/* Edit profile modal */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.modal.open {
+  display: block;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+.modal-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--primary-color);
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--card-border);
+}
+.modal-panel h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.field-group {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field-group label {
+  font-size: 0.85rem;
+  color: #c9c9c9;
+}
+.field-group input,
+.field-group textarea {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-color);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+.modal .btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+.modal .btn.primary {
+  background: var(--accent-color);
+  color: var(--primary-color);
+}
+.modal .btn.cancel {
+  background: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--card-border);
 }

@@ -2,6 +2,218 @@
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
+  overflow-x: hidden; /* prevent horizontal scroll */
+}
+
+/* Composer (top box styled like the screenshot) */
+.composer {
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1; /* ensure composer stays above other content but below sidebar */
+  width: 100%; /* ensure composer doesn't exceed container */
+  box-sizing: border-box;
+}
+
+/* Composer: vertical layout like Reddit */
+.composer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #f3f6fb);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* top row: avatar + fields */
+.composer-top {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* Avatar: large square like your screenshot */
+.composer-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* fields column */
+.composer-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Title and file input styles */
+.composer-title {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #dfe7f5;
+  background: #fff;
+  font-size: 15px;
+}
+
+/* Input: compact single-line appearance (use textarea but forced height) */
+.composer-input {
+  width: 100%;
+  max-width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #dfe7f5;
+  background: #fff;
+  color: #111;
+  font-size: 14px;
+  line-height: 1.1;
+  resize: vertical; /* allow vertical resize if user needs more space */
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+/* file row and actions aligned */
+.composer-file-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* file input styling (kept simple) */
+.composer-files {
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 13px;
+}
+
+/* Post button */
+#postButton {
+  padding: 8px 14px;
+  background: #0071ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 1;
+}
+#postButton:hover {
+  background: #005fd6;
+}
+
+/* small inline preview thumbnails */
+.file-preview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.file-preview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* thumbnail with remove 'x' button */
+.file-preview .thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: inline-block;
+}
+.file-preview .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.file-preview .thumb .remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Composer inline message */
+.composer-message {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: none;
+  font-size: 14px;
+}
+.composer-message.error {
+  background: #ffecec;
+  color: #8b0d0d;
+  border: 1px solid #f5c6c6;
+  display: block;
+}
+.composer-message.success {
+  background: #e9ffec;
+  color: #0b6f2b;
+  border: 1px solid #c6f5d1;
+  display: block;
+}
+
+/* composer file input and preview are visible */
+.composer-files {
+  display: inline-block;
+}
+.file-preview {
+  display: flex;
+}
+
+/* Responsive: keep layout comfortable on small screens */
+@media (max-width: 900px) {
+  .communities-page {
+    padding: 10px;
+  }
+  .composer-top {
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .composer-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  .composer-input {
+    min-height: 80px;
+    font-size: 13px;
+  }
+  .composer-form {
+    padding: 12px;
+  }
+  .composer-file-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #postButton {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 4px;
+  }
 }
 
 h1 {
@@ -40,11 +252,12 @@ h1 {
 }
 
 .post {
-  background: #1e1e2f;
+  background: #252536; /* was #1e1e2f - now a bit lighter */
   color: #fff;
   padding: 15px;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .post-header {
@@ -54,22 +267,204 @@ h1 {
   margin-bottom: 10px;
 }
 
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Three-dot menu */
+.post-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.post-menu-btn {
+  background: transparent;
+  border: none;
+  color: #c9c9c9;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.post-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #2a2a3e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  min-width: 120px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  display: none;
+  overflow: hidden;
+}
+
+.post-menu-dropdown[aria-hidden='false'] {
+  display: block;
+}
+
+.post-menu-dropdown .menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  color: #c9c9c9;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.post-menu-dropdown .menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-menu-dropdown .menu-item.delete-post {
+  color: #ff6b6b;
+}
+
+.post-menu-dropdown .menu-item.delete-post:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
 .post-content {
   font-size: 1rem;
   margin-bottom: 10px;
 }
 
+/* Ensure images inside posts are constrained and don't overflow */
+.post .post-images {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.post .post-images img {
+  max-width: 100%;
+  width: auto; /* don't force to container width if container is larger */
+  height: auto; /* preserve aspect ratio */
+  max-height: 560px; /* limit extremely tall images */
+  object-fit: contain; /* crop/fit fallback when needed */
+  border-radius: 8px;
+  display: block;
+}
+
+/* Single-image posts: show the single image at 50% width and center it */
+.post .post-images img:only-child {
+  width: 50% !important;
+  max-width: 50% !important;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+/* Carousel styles for multi-image posts */
+.post .post-images.carousel {
+  position: relative;
+  overflow: hidden; /* prevent images from spilling out */
+}
+.post .post-images.carousel .slides {
+  width: 100%;
+  position: relative;
+}
+.post .post-images.carousel .slides img {
+  width: 100%;
+  height: auto;
+  display: none; /* JS will show the active one */
+  border-radius: 8px;
+}
+.post .post-images.carousel .carousel-prev,
+.post .post-images.carousel .carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5; /* below sidebar (z-index: 10) so they don't show through */
+}
+.post .post-images.carousel .carousel-prev {
+  left: 8px;
+}
+.post .post-images.carousel .carousel-next {
+  right: 8px;
+}
+
+/* Hide carousel arrows when sidebar is open on mobile */
+@media screen and (max-width: 500px) {
+  nav.show ~ * .post .post-images.carousel .carousel-prev,
+  nav.show ~ * .post .post-images.carousel .carousel-next {
+    display: none;
+  }
+}
+
+/* If you have multiple images per post, show them as a grid on wider screens */
+@media (min-width: 720px) {
+  .post .post-images.multiple {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .post .post-images.multiple img {
+    max-height: 360px;
+  }
+}
+
 .post-actions button {
   margin-right: 10px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   border: none;
-  border-radius: 6px;
-  background: #333;
-  color: #fff;
+  border-radius: 8px;
+  background: #0f1720; /* deep dark */
+  color: #e6eef8;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) inset;
 }
 .post-actions button:hover {
-  background: #444;
+  background: #19202a;
+}
+/* liked state: filled heart / accent color */
+.post-actions .like-btn.liked {
+  background: linear-gradient(180deg, #ff6b6b, #ff3b6b);
+  color: #fff;
+}
+
+/* Make comment container hidden until toggled */
+.comments[aria-hidden='true'] {
+  display: none;
+}
+
+.post-actions .comment-toggle {
+  background: #0f1720;
+  color: #dbe7f5;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.post-actions .comment-toggle:hover {
+  background: #19202a;
 }
 
 .comments {

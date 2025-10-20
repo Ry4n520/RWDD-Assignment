@@ -1,12 +1,9 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.event-popup-content #popup-action-btn {
-  display: none;
-}
 .events-page {
   padding: 20px;
 }
@@ -21,21 +18,149 @@
   color: #666;
 }
 
-.events-list {
+.events-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(375px, 1fr));
   gap: 20px;
 }
+@media (max-width: 600px) {
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
+.event-details {
+  padding: 15px;
+}
+.event-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.event-card-head h2 {
+  margin: 0;
+}
+
+.event-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.event-edit-btn,
+.event-delete-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.event-edit-btn {
+  color: #82b1ff;
+}
+
+.event-edit-btn:hover {
+  background: rgba(130, 177, 255, 0.1);
+  border-color: rgba(130, 177, 255, 0.3);
+}
+
+.event-delete-btn {
+  color: #ff8a80;
+}
+
+.event-delete-btn:hover {
+  background: rgba(255, 138, 128, 0.1);
+  border-color: rgba(255, 138, 128, 0.3);
+}
+
+/* Three-dot menu for events */
+.event-menu {
+  position: relative;
+}
+
+.event-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.event-menu-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.event-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #2a2a3e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 140px;
+  z-index: 1000;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.event-menu-dropdown[aria-hidden='true'] {
+  display: none !important;
+}
+
+.event-menu-dropdown[aria-hidden='false'] {
+  display: block !important;
+}
+
+.event-menu-dropdown .menu-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.event-menu-dropdown .menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.event-menu-dropdown .menu-item.delete-event {
+  color: #ff6b6b;
+}
+
+.event-menu-dropdown .menu-item.delete-event:hover {
+  background-color: rgba(255, 107, 107, 0.1);
+}
+
+/* Removed three-dots and popup delete icon styles */
+
+/* Event cards */
 .event-card {
   background: #23233a;
   color: #fff;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  border: 4px solid #29294a; /* Subtle border */
+  border: 4px solid #29294a;
 }
 
 .event-card img {
@@ -45,10 +170,6 @@
   display: block;
   margin: 0 auto;
   max-width: 100%;
-}
-
-.event-details {
-  padding: 15px;
 }
 
 .event-details h2 {
@@ -68,43 +189,47 @@
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .join-btn:hover {
   background-color: #3498db;
 }
 
-/* Popup styles */
+/* Leave state is red */
+.join-btn.leave {
+  background-color: #dc3545; /* Bootstrap danger */
+}
+.join-btn.leave:hover {
+  background-color: #b02a37; /* darker on hover */
+}
+
+/* Popup */
 .event-popup {
-  position: fixed;
+  position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  display: flex;
+  display: none; /* stays hidden until JS shows it */
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
+
 .event-popup-content {
   background: #fff;
   color: #222;
   border-radius: 10px;
-  padding: 50px 20px 20px 20px;
+  padding: 50px 20px 20px;
   max-width: 700px;
   width: 90%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   position: relative;
-  
 }
 
-.event-popup-content .popup-info {
-  text-align: left;
-  margin-left: auto;
-  margin-right: auto;
-  width: 80%; /* or your preferred width */
-}
+/* Compact modal variant shares the same class, width overridden inline */
 
 .event-popup-content img {
   width: 95%;
@@ -112,10 +237,41 @@
   object-fit: cover;
   border-radius: 8px;
   display: block;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 20px;
+  margin: 0 auto 20px;
 }
+
+.event-popup-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.event-popup-content p {
+  margin: 6px 0;
+  font-size: 1rem;
+}
+
+#event-popup-action-btn {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #4cafef;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+}
+
+#event-popup-action-btn:hover {
+  background-color: #3498db;
+}
+
+/* Popup leave variant */
+#event-popup-action-btn.leave {
+  background-color: #dc3545;
+}
+#event-popup-action-btn.leave:hover {
+  background-color: #b02a37;
+}
+
 .event-popup-close {
   position: absolute;
   top: 5px;

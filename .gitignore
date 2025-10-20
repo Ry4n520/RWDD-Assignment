@@ -1,0 +1,8 @@
+/public/uploads/
+/public/uploads/avatars/
+
+# Node/npm/IDE/etc common ignores (optional)
+node_modules/
+.DS_Store
+.vscode/
+*.log
