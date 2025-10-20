@@ -1,6 +1,6 @@
 <?php
+include '../src/auth.php';
 // load session and DB, then fetch current user to populate profile fields
-session_start();
 include __DIR__ . '/../src/db.php';
 
 $userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;

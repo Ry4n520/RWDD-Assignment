@@ -1,9 +1,9 @@
 <?php
+include '../src/auth.php';
 // Simplified communities.php - show posts and comment counts; no auth checks
 include __DIR__ . '/../src/db.php';
 
 // determine composer avatar from logged-in user (if any)
-session_start();
 $composerAvatar = 'assets/images/default-profile.jpg';
 $sessUid = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
 // integer session uid for SQL
@@ -22,7 +22,7 @@ if ($sessUid) {
 
 // Fetch posts with like count and comment count
 $postsSql = "
-  SELECT p.PostID, p.Content, p.Title, p.Created_at, p.UserID, a.username,
+  SELECT p.PostID, p.Content, p.Created_at, p.UserID, a.username,
     (SELECT COUNT(*) FROM postlikes pl WHERE pl.PostID = p.PostID) AS like_count,
     (SELECT COUNT(*) FROM comments c WHERE c.PostID = p.PostID) AS comment_count,
   (SELECT GROUP_CONCAT(path SEPARATOR '||') FROM post_images pi WHERE pi.PostID = p.PostID ORDER BY pi.id ASC) AS images

@@ -1,5 +1,5 @@
 <?php
-session_start();
+include '../src/auth.php';
 include __DIR__ . '/../src/db.php';
 
 $currentUserId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;

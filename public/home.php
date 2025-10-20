@@ -1,6 +1,5 @@
-<?php /* include '../src/auth.php'; */
+<?php include '../src/auth.php';
 // Dynamic homepage: fetch latest trading item, event, and community post
-session_start();
 include __DIR__ . '/../src/db.php';
 
 $currentUserId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
@@ -77,7 +76,6 @@ $latestPost = [];
 if (isset($conn)) {
   $sql = "SELECT p.PostID,
                  p.Content,
-                 p.Title,
                  p.Created_at,
                  a.username,
                  (SELECT path FROM post_images pi WHERE pi.PostID = p.PostID ORDER BY pi.id ASC LIMIT 1) AS ImagePath
@@ -234,7 +232,7 @@ if (isset($conn)) {
               <div style="display:flex;gap:12px;align-items:center;padding:8px;border-radius:6px;transition:background 0.2s" onmouseover="this.style.background='rgba(144,238,144,0.1)'" onmouseout="this.style.background='transparent'">
                 <img src="<?= h($post['ImagePath'] ?: 'https://placehold.co/200x140') ?>" alt="Post Image" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #00000022" />
                 <div style="flex:1">
-                  <div style="font-weight:700;line-height:1.2;font-size:0.95rem"><?= h($post['Title'] ?: 'Community Post') ?></div>
+                  <div style="font-weight:700;line-height:1.2;font-size:0.95rem">Community Post</div>
                   <div style="opacity:.85;font-size:.85rem">by <?= h($post['username']) ?></div>
                   <div style="opacity:.8;font-size:.8rem"><?= h(excerpt($post['Content'], 80)) ?></div>
                 </div>
