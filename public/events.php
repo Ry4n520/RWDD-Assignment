@@ -1,9 +1,8 @@
 <?php
-include '../src/auth.php';
+/* include '../src/auth.php'; */
 include __DIR__ . '/../src/db.php';
 
-$currentUserId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
-$currentUserId = $currentUserId ? (int)$currentUserId : 0;
+$currentUserId = (int)($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
 
 // Check if user is admin
 $isAdmin = false;
@@ -17,23 +16,21 @@ if ($currentUserId) {
   }
 }
 
+$sql = "SELECT e.EventID,
+               e.Name AS EventName,
+               e.Address,
+               e.Date,
+               e.Organizer,
+     (SELECT ei.path FROM event_images ei WHERE ei.EventID = e.EventID ORDER BY ei.id ASC LIMIT 1) AS ImagePath,
+               (SELECT COUNT(*) FROM eventparticipants epc WHERE epc.EventID = e.EventID) AS ParticipantCount,
+               EXISTS(SELECT 1 FROM eventparticipants ep WHERE ep.EventID = e.EventID AND ep.UserID = ?) AS Joined
+        FROM events e
+        ORDER BY e.Date ASC";
 $result = null;
-if ($conn) {
-  $sql = "SELECT e.EventID,
-                 e.Name AS EventName,
-                 e.Address,
-                 e.Date,
-                 e.Organizer,
-       (SELECT ei.path FROM event_images ei WHERE ei.EventID = e.EventID ORDER BY ei.id ASC LIMIT 1) AS ImagePath,
-                 (SELECT COUNT(*) FROM eventparticipants epc WHERE epc.EventID = e.EventID) AS ParticipantCount,
-                 EXISTS(SELECT 1 FROM eventparticipants ep WHERE ep.EventID = e.EventID AND ep.UserID = ?) AS Joined
-          FROM events e
-          ORDER BY e.Date ASC";
-  if ($stmt = mysqli_prepare($conn, $sql)) {
-    mysqli_stmt_bind_param($stmt, 'i', $currentUserId);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-  }
+if ($stmt = mysqli_prepare($conn, $sql)) {
+  mysqli_stmt_bind_param($stmt, 'i', $currentUserId);
+  mysqli_stmt_execute($stmt);
+  $result = mysqli_stmt_get_result($stmt);
 }
 ?>
 
@@ -45,9 +42,9 @@ if ($conn) {
   <title>Events</title>
   <link rel="stylesheet" href="assets/css/navbar.css?v=20251020c" />
   <link rel="stylesheet" href="assets/css/theme.css?v=20251018" />
-  <link rel="stylesheet" href="assets/css/events.css?v=20251020g" />
+  <link rel="stylesheet" href="assets/css/events.css?v=20251021" />
   <script src="assets/js/navbar.js?v=20251020" defer></script>
-  <script src="assets/js/events.js?v=20251020i" defer></script>
+  <script src="assets/js/events.js?v=20251021" defer></script>
 </head>
 <body>
   <?php include 'includes/header.php'; ?>
@@ -56,19 +53,28 @@ if ($conn) {
     <h1>Community Events</h1>
     <p>Discover upcoming events in your communities.</p>
     
-      <!-- Admin: Post Event trigger (admin only) -->
-      <?php if ($isAdmin): ?>
-        <div style="margin:12px 0 20px; display:flex; justify-content:flex-end">
-          <button id="event-post-open" class="join-btn">Post an event</button>
-        </div>
-      <?php endif; ?>
+    <!-- Filter and action controls -->
+    <div class="events-controls">
+      <div class="events-filters">
+        <button class="filter-btn active" id="ascending-btn">
+          <span>▲</span> Ascending
+        </button>
+        <button class="filter-btn" id="latest-btn">Latest</button>
+        <button class="filter-btn" id="joined-events-btn">Joined Events</button>
+      </div>
+      <div class="events-actions">
+        <!-- Admin: Post Event trigger (admin only) -->
+        <?php if ($isAdmin): ?>
+          <button id="event-post-open" class="action-btn">Post an event</button>
+        <?php endif; ?>
+      </div>
+    </div>
 
     <section class="events-grid">
       <?php if ($result && mysqli_num_rows($result) > 0): ?>
         <?php while ($row = mysqli_fetch_assoc($result)): ?>
     <div class="event-card"
       data-event-id="<?= (int)$row['EventID'] ?>"
-      data-creator-id="<?= isset($row['CreatorID']) ? (int)$row['CreatorID'] : 0 ?>"
       data-img="<?= !empty($row['ImagePath']) ? htmlspecialchars($row['ImagePath']) : 'https://placehold.co/600x400' ?>"
       data-title="<?= htmlspecialchars($row['EventName']) ?>"
       data-organizer="<?= htmlspecialchars($row['Organizer']) ?>"
@@ -99,10 +105,8 @@ if ($conn) {
               <p><strong>Date:</strong> <?= htmlspecialchars($row['Date']) ?></p>
               <p><strong>Address:</strong> <?= htmlspecialchars($row['Address']) ?></p>
               <p><strong>Participants:</strong> <span class="participants-count"><?= isset($row['ParticipantCount']) ? (int)$row['ParticipantCount'] : 0 ?></span></p>
-              <!-- Community information removed (schema no longer has community table) -->
-              <?php $joined = !empty($row['Joined']); ?>
-              <button class="join-btn<?= $joined ? ' leave' : '' ?>">
-                <?= $joined ? 'Leave Event' : 'Join Event' ?>
+              <button class="join-btn<?= !empty($row['Joined']) ? ' leave' : '' ?>">
+                <?= !empty($row['Joined']) ? 'Leave Event' : 'Join Event' ?>
               </button>
             </div>
           </div>
@@ -119,7 +123,6 @@ if ($conn) {
       <span class="event-popup-close">&times;</span>
       <img id="event-popup-img" src="" alt="Event Image" />
       <h2 id="event-popup-title"></h2>
-      <p id="event-popup-community"></p>
       <p id="event-popup-organizer"></p>
       <p id="event-popup-address"></p>
       <p id="event-popup-date"></p>
@@ -189,6 +192,6 @@ if ($conn) {
     </div>
   </div>
 
-  <script src="assets/js/events.js?v=20251020i"></script>
+
 </body>
 </html>

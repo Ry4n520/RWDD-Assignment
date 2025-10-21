@@ -1,34 +1,55 @@
 :root {
-  /* Default (dark) theme variables */
-  --primary-color: #11121a;
-  --hover-color: #272832;
-  --accent-color: #0071ff;
+  /* Default (dark) theme variables - Updated to match new palette */
+  --bg-darkest: #0a1014;
+  --bg-dark-teal: #072227;
+  --bg-medium: #192e3c;
+  --accent-orange: #e07800;
+  --accent-light-orange: #e08828;
+
+  --primary-color: #072227; /* Background color (dark teal) */
+  --hover-color: #192e3c;
+  --accent-color: #e07800;
+  --accent-rgb: 224, 120, 0;
   --text-color: #c9c9c9;
-  --card-bg: #1b2330;
-  --card-border: rgba(255, 255, 255, 0.06);
+  --card-bg: #0a1014; /* Card background (darkest) */
+  --card-border: rgba(224, 120, 0, 0.2);
   --muted-text: #a7b6c2;
 }
 
 /* Dark theme explicit */
 :root[data-theme='dark'] {
-  --primary-color: #11121a;
-  --hover-color: #272832;
-  --accent-color: #0071ff;
+  --bg-darkest: #0a1014;
+  --bg-dark-teal: #072227;
+  --bg-medium: #192e3c;
+  --accent-orange: #e07800;
+  --accent-light-orange: #e08828;
+
+  --primary-color: #072227; /* Background color (dark teal) */
+  --hover-color: #192e3c;
+  --accent-color: #e07800;
+  --accent-rgb: 224, 120, 0;
   --text-color: #cfd8dc;
-  --card-bg: #1b2330;
-  --card-border: rgba(255, 255, 255, 0.06);
+  --card-bg: #0a1014; /* Card background (darkest) */
+  --card-border: rgba(224, 120, 0, 0.2);
   --muted-text: #a7b6c2;
 }
 
-/* Light theme */
+/* Light theme - Green Palette */
 :root[data-theme='light'] {
-  --primary-color: #ffffff;
-  --hover-color: #f1f3f5;
-  --accent-color: #0061d6;
-  --text-color: #1f2937;
-  --card-bg: #ffffff;
-  --card-border: rgba(0, 0, 0, 0.06);
-  --muted-text: #4b5563;
+  --bg-lightest: #b8f0d0; /* Even lighter background for better contrast */
+  --bg-light-green: #7ed2a1;
+  --bg-medium-green: #71c494;
+  --bg-dark-green: #6cbc8d;
+  --bg-darkest-green: #569972;
+
+  --primary-color: #b8f0d0; /* Background color (lighter) */
+  --hover-color: #7ed2a1;
+  --accent-color: #569972; /* Darkest for buttons */
+  --accent-rgb: 86, 153, 114;
+  --text-color: #1a1a1a; /* Dark text for better visibility on light background */
+  --card-bg: #6cbc8d; /* Use darker green from palette for boxes */
+  --card-border: rgba(86, 153, 114, 0.3);
+  --muted-text: #2d4a3a; /* Darker muted text for readability */
 }
 
 /* Optional: transition for smooth theme change */

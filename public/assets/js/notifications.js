@@ -123,17 +123,32 @@
       if (headerRead) headerRead.textContent = `Read (${readCount})`;
     }
     const markBtn = document.createElement('button');
-    markBtn.textContent = 'Mark read';
     markBtn.className = 'btn btn-sm btn-outline';
-    markBtn.addEventListener('click', async () => {
-      await api('api/notifications.php', {
-        method: 'POST',
-        body: new URLSearchParams({ action: 'mark_read', id: n.id }),
+
+    // Different button text and action based on read status
+    if (n.is_read) {
+      markBtn.textContent = 'Mark as unread';
+      markBtn.addEventListener('click', async () => {
+        await api('api/notifications.php', {
+          method: 'POST',
+          body: new URLSearchParams({ action: 'mark_unread', id: n.id }),
+        });
+        // Reload list so this item moves from Read to Unread
+        const container = document.getElementById('notificationsList');
+        if (container) loadNotifications(container);
       });
-      // Reload list so this item moves from Unread to Read
-      const container = document.getElementById('notificationsList');
-      if (container) loadNotifications(container);
-    });
+    } else {
+      markBtn.textContent = 'Mark read';
+      markBtn.addEventListener('click', async () => {
+        await api('api/notifications.php', {
+          method: 'POST',
+          body: new URLSearchParams({ action: 'mark_read', id: n.id }),
+        });
+        // Reload list so this item moves from Unread to Read
+        const container = document.getElementById('notificationsList');
+        if (container) loadNotifications(container);
+      });
+    }
     actions.appendChild(markBtn);
 
     // Accept/Decline for trading requests (only if still Pending)

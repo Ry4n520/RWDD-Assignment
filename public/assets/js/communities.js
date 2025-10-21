@@ -66,12 +66,8 @@ function buildPostHtml(post, commentCount) {
     <div class="post-images">${imagesHtml}</div>
       <div class="post-actions">
         ${(() => {
-          const liked =
-            post.liked ||
-            post.liked_by_me ||
-            post.liked_by_current_user ||
-            false;
-          const count = post.likes || post.like_count || post.LikeCount || 0;
+          const liked = post.liked || false;
+          const count = post.like_count || 0;
           return `<button type="button" class="like-btn ${
             liked ? 'liked' : ''
           }" data-type="post" data-id="${post.PostID}" data-liked="${
@@ -165,20 +161,8 @@ document.addEventListener('click', async function (e) {
     } catch (err) {
       console.error(err);
       // show helpful message when auth is required
-      const apiErr =
-        err && err.response && err.response.error
-          ? err.response.error
-          : err && err.message
-          ? err.message
-          : 'Failed to like';
-      // If raw server text is present (invalid JSON), show that snippet to help debugging
-      if (err && err.raw) {
-        console.error('Server returned invalid JSON:', err.raw);
-        showMessage(
-          'Server error: ' + (err.raw.slice ? err.raw.slice(0, 300) : err.raw),
-          'error'
-        );
-      } else if (/auth|authentication/i.test(apiErr)) {
+      const apiErr = err?.response?.error || err?.message || 'Failed to like';
+      if (/auth|authentication/i.test(apiErr)) {
         showMessage('Log in to like items', 'error');
       } else {
         showMessage(apiErr, 'error');
@@ -194,7 +178,6 @@ document.addEventListener('click', async function (e) {
 document.addEventListener('submit', async function (e) {
   const form = e.target.closest('.add-comment-ajax');
   if (form) {
-    console.log('comment submit handler triggered', form);
     e.preventDefault();
     const postId = form.dataset.postid || form.closest('.post')?.dataset.postid;
     const input = form.querySelector('input[name="content"]');
@@ -212,10 +195,8 @@ document.addEventListener('submit', async function (e) {
         const commentsContainer = postEl
           ? postEl.querySelector('.comments')
           : null;
-        const commentLiked =
-          json.comment.liked || json.comment.liked_by_me || false;
-        const commentCountVal =
-          json.comment.likes || json.comment.like_count || 0;
+        const commentLiked = json.comment.liked || false;
+        const commentCountVal = json.comment.like_count || 0;
         const commentHtml = `<div class="comment"><span class="comment-user">${escapeHtml(
           json.comment.username
         )}:</span><p>${escapeHtml(
@@ -244,13 +225,9 @@ document.addEventListener('submit', async function (e) {
       }
     } catch (err) {
       console.error('comment POST error', err);
-      // try to show JSON error message from the API (apiFetch attaches parsed response as err.response)
+      // try to show JSON error message from the API
       const apiErr =
-        err && err.response && err.response.error
-          ? err.response.error
-          : err && err.message
-          ? err.message
-          : 'Failed to post comment';
+        err?.response?.error || err?.message || 'Failed to post comment';
       showMessage(apiErr, 'error');
     }
   }
@@ -269,7 +246,7 @@ function renderCommentsHtml(comments) {
         }" data-type="comment" data-id="${c.CommentID}" data-liked="${
           c.liked ? '1' : '0'
         }" aria-pressed="${c.liked ? 'true' : 'false'}">👍 ${
-          c.likes || c.like_count || c.LikeCount || 0
+          c.like_count || 0
         }</button></div>`
     )
     .join('');

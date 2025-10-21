@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const popupImg = document.getElementById('event-popup-img');
   const popupTitle = document.getElementById('event-popup-title');
-  const popupCommunity = document.getElementById('event-popup-community');
   const popupOrganizer = document.getElementById('event-popup-organizer');
   const popupAddress = document.getElementById('event-popup-address');
   const popupDate = document.getElementById('event-popup-date');
@@ -90,16 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputOrganizer = document.getElementById('post-event-organizer');
   const inputImages = document.getElementById('post-event-images');
   const imagesPreview = document.getElementById('post-event-images-preview');
-
-  // Utility: close any open event-menu
-  function closeAllMenus() {
-    document
-      .querySelectorAll('.event-menu.open')
-      .forEach((m) => m.classList.remove('open'));
-    document
-      .querySelectorAll('.event-menu-btn[aria-expanded="true"]')
-      .forEach((b) => b.setAttribute('aria-expanded', 'false'));
-  }
 
   function openPostModal() {
     if (!postModal) return;
@@ -304,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
           // open popup with new card details
           popupImg.src = card.dataset.img;
           popupTitle.textContent = card.dataset.title;
-          popupCommunity.textContent = '';
           popupOrganizer.textContent = 'Organizer: ' + card.dataset.organizer;
           popupAddress.textContent = 'Location: ' + card.dataset.address;
           popupDate.textContent = 'Date: ' + card.dataset.date;
@@ -574,71 +562,8 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       true
     );
-    // Inject menu element container inside details if not present
-    const details = card.querySelector('.event-details');
-    const rowTop = details?.querySelector('.event-row-top');
-    if (rowTop && !details.querySelector('.event-menu')) {
-      const menu = document.createElement('div');
-      menu.className = 'event-menu';
-      menu.innerHTML = `
-        <div class="menu-item" data-action="delete">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="opacity:.9"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          <span>Delete event</span>
-        </div>`;
-      details.style.position = 'relative';
-      details.appendChild(menu);
-    }
 
-    const menuBtn = card.querySelector('.event-menu-btn');
-    const menuEl = card.querySelector('.event-menu');
-    if (menuBtn && menuEl) {
-      menuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = menuEl.classList.contains('open');
-        closeAllMenus();
-        if (!isOpen) {
-          menuEl.classList.add('open');
-          menuBtn.setAttribute('aria-expanded', 'true');
-        }
-      });
-      menuEl.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const item = e.target.closest('.menu-item');
-        if (!item) return;
-        if (item.dataset.action === 'delete') {
-          const eventId = card.dataset.eventId || '';
-          if (!eventId) return;
-          const confirmed = confirm(
-            'Delete this event? This cannot be undone.'
-          );
-          if (!confirmed) return;
-          try {
-            const form = new URLSearchParams();
-            form.set('event_id', eventId);
-            const res = await fetch('api/event_delete.php', {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: form.toString(),
-            });
-            const data = await res.json().catch(() => ({ ok: false }));
-            if (data.ok) {
-              card.remove();
-              showToast('Event deleted', 'info');
-            } else {
-              showToast(data.error || 'Failed to delete', 'error');
-            }
-          } catch (err) {
-            showToast('Network error', 'error');
-          } finally {
-            closeAllMenus();
-          }
-        }
-      });
-    }
     card.addEventListener('click', (e) => {
-      // clicking outside menu should close menus
-      closeAllMenus();
       if (e.target.classList.contains('join-btn')) {
         e.stopPropagation();
         const btn = e.target;
@@ -671,11 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       popupImg.src = card.dataset.img;
       popupTitle.textContent = card.dataset.title;
-      if (card.dataset.community) {
-        popupCommunity.textContent = 'Community: ' + card.dataset.community;
-      } else {
-        popupCommunity.textContent = '';
-      }
       popupOrganizer.textContent = 'Organizer: ' + card.dataset.organizer;
       popupAddress.textContent = 'Location: ' + card.dataset.address;
       popupDate.textContent = 'Date: ' + card.dataset.date;
@@ -749,11 +669,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Close menus when clicking outside cards
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.event-details')) closeAllMenus();
-  });
-
   closeBtn.addEventListener('click', () => {
     popup.style.display = 'none';
     // Restore background scroll
@@ -767,4 +682,116 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.style.overflow = '';
     }
   });
+
+  // --- Filter and sort controls ---
+  (function () {
+    const ascendingBtn = document.getElementById('ascending-btn');
+    const latestBtn = document.getElementById('latest-btn');
+    const joinedEventsBtn = document.getElementById('joined-events-btn');
+    const filterBtns = [ascendingBtn, latestBtn, joinedEventsBtn];
+
+    let currentFilter = 'all'; // 'all' or 'joined'
+
+    // Toggle active state and apply filter/sort
+    filterBtns.forEach((btn) => {
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        // Remove active from all
+        filterBtns.forEach((b) => b && b.classList.remove('active'));
+        // Add active to clicked
+        btn.classList.add('active');
+
+        // Apply sorting/filtering logic based on which button was clicked
+        if (btn === ascendingBtn) {
+          currentFilter = 'all';
+          sortCards('ascending');
+        } else if (btn === latestBtn) {
+          currentFilter = 'all';
+          sortCards('latest');
+        } else if (btn === joinedEventsBtn) {
+          currentFilter = 'joined';
+          filterJoinedEvents();
+        }
+      });
+    });
+
+    function filterJoinedEvents() {
+      if (!grid) return;
+
+      const allCards = Array.from(grid.querySelectorAll('.event-card'));
+
+      // Hide all cards first
+      allCards.forEach((card) => {
+        card.style.display = 'none';
+      });
+
+      // Show only joined events
+      const joinedCards = allCards.filter((card) => {
+        const joined = card.dataset.joined === '1';
+        return joined;
+      });
+
+      if (joinedCards.length === 0) {
+        // Show message if no joined events
+        const message = document.createElement('p');
+        message.id = 'no-joined-message';
+        message.textContent = "You haven't joined any events yet.";
+        message.style.textAlign = 'center';
+        message.style.color = '#666';
+        message.style.padding = '40px 20px';
+        message.style.gridColumn = '1 / -1';
+        grid.appendChild(message);
+      } else {
+        // Remove any existing message
+        const existingMessage = grid.querySelector('#no-joined-message');
+        if (existingMessage) existingMessage.remove();
+
+        // Show joined cards
+        joinedCards.forEach((card) => {
+          card.style.display = '';
+        });
+      }
+
+      showToast('Showing joined events', 'success');
+    }
+
+    function sortCards(type) {
+      if (!grid) return;
+
+      // Remove "no joined events" message if it exists
+      const message = grid.querySelector('#no-joined-message');
+      if (message) message.remove();
+
+      const allCards = Array.from(grid.querySelectorAll('.event-card'));
+
+      // Show all cards
+      allCards.forEach((card) => {
+        card.style.display = '';
+      });
+
+      if (type === 'latest') {
+        // Sort by date descending (newest first)
+        allCards.sort((a, b) => {
+          const dateA = new Date(a.dataset.date || 0);
+          const dateB = new Date(b.dataset.date || 0);
+          return dateB - dateA; // descending
+        });
+
+        // Re-append in new order
+        allCards.forEach((card) => grid.appendChild(card));
+        showToast('Showing latest events', 'success');
+      } else if (type === 'ascending') {
+        // Sort by date ascending (oldest first)
+        allCards.sort((a, b) => {
+          const dateA = new Date(a.dataset.date || 0);
+          const dateB = new Date(b.dataset.date || 0);
+          return dateA - dateB; // ascending
+        });
+
+        // Re-append in new order
+        allCards.forEach((card) => grid.appendChild(card));
+        showToast('Sorted by date (ascending)', 'success');
+      }
+    }
+  })();
 });

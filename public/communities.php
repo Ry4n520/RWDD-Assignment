@@ -1,17 +1,14 @@
 <?php
-include '../src/auth.php';
+/* include '../src/auth.php'; */
 // Simplified communities.php - show posts and comment counts; no auth checks
 include __DIR__ . '/../src/db.php';
 
 // determine composer avatar from logged-in user (if any)
 $composerAvatar = 'assets/images/default-profile.jpg';
-$sessUid = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
-// integer session uid for SQL
-$sessUidInt = $sessUid ? intval($sessUid) : 0;
+$sessUidInt = (int)($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
 $isAdmin = false;
-if ($sessUid) {
-  $u = intval($sessUid);
-  $r = mysqli_query($conn, "SELECT profile_picture, usertype FROM accounts WHERE UserID = " . $u . " LIMIT 1");
+if ($sessUidInt) {
+  $r = mysqli_query($conn, "SELECT profile_picture, usertype FROM accounts WHERE UserID = " . $sessUidInt . " LIMIT 1");
   if ($r && mysqli_num_rows($r) > 0) {
     $row = mysqli_fetch_assoc($r);
     if (!empty($row['profile_picture'])) $composerAvatar = $row['profile_picture'];
@@ -25,12 +22,16 @@ $postsSql = "
   SELECT p.PostID, p.Content, p.Created_at, p.UserID, a.username,
     (SELECT COUNT(*) FROM postlikes pl WHERE pl.PostID = p.PostID) AS like_count,
     (SELECT COUNT(*) FROM comments c WHERE c.PostID = p.PostID) AS comment_count,
+    EXISTS(SELECT 1 FROM postlikes pl2 WHERE pl2.PostID = p.PostID AND pl2.UserID = ?) AS liked,
   (SELECT GROUP_CONCAT(path SEPARATOR '||') FROM post_images pi WHERE pi.PostID = p.PostID ORDER BY pi.id ASC) AS images
   FROM posts p
   JOIN accounts a ON p.UserID = a.UserID
   ORDER BY p.Created_at DESC
 ";
-$posts = mysqli_query($conn, $postsSql);
+$stmt = mysqli_prepare($conn, $postsSql);
+mysqli_stmt_bind_param($stmt, 'i', $sessUidInt);
+mysqli_stmt_execute($stmt);
+$posts = mysqli_stmt_get_result($stmt);
 ?>
 <!doctype html>
 <html lang="en">
@@ -38,10 +39,9 @@ $posts = mysqli_query($conn, $postsSql);
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Communities</title>
-  <?php $cssVer = file_exists(__DIR__ . '/assets/css/communities.css') ? filemtime(__DIR__ . '/assets/css/communities.css') : time(); ?>
   <link rel="stylesheet" href="assets/css/navbar.css?v=20251020c">
   <link rel="stylesheet" href="assets/css/theme.css?v=20251018">
-  <link rel="stylesheet" href="assets/css/communities.css?v=<?= $cssVer ?>">
+  <link rel="stylesheet" href="assets/css/communities.css?v=20251020">
   <script src="assets/js/navbar.js?v=20251020" defer></script>
 </head>
 <body>
@@ -73,14 +73,6 @@ $posts = mysqli_query($conn, $postsSql);
     <section class="posts">
       <?php if ($posts && mysqli_num_rows($posts) > 0): ?>
         <?php while ($post = mysqli_fetch_assoc($posts)): ?>
-          <?php
-            // determine whether current user liked this post (if logged in)
-            $liked = false;
-            if ($sessUidInt) {
-              $check = mysqli_query($conn, "SELECT 1 FROM postlikes WHERE PostID = " . intval($post['PostID']) . " AND UserID = " . $sessUidInt . " LIMIT 1");
-              if ($check && mysqli_num_rows($check) > 0) $liked = true;
-            }
-          ?>
           <article class="post" data-postid="<?= $post['PostID'] ?>">
             <div class="post-header">
               <h3 class="post-title"><?= htmlspecialchars($post['username']) ?></h3>
@@ -105,24 +97,17 @@ $posts = mysqli_query($conn, $postsSql);
             </div>
             <p class="post-content"><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
             <div class="post-actions">
-              <button type="button" class="like-btn<?= $liked ? ' liked' : '' ?>" data-type="post" data-id="<?= $post['PostID'] ?>" data-liked="<?= $liked ? '1' : '0' ?>" aria-pressed="<?= $liked ? 'true' : 'false' ?>">👍 <?= intval($post['like_count']) ?></button>
+              <button type="button" class="like-btn<?= !empty($post['liked']) ? ' liked' : '' ?>" data-type="post" data-id="<?= $post['PostID'] ?>" data-liked="<?= !empty($post['liked']) ? '1' : '0' ?>" aria-pressed="<?= !empty($post['liked']) ? 'true' : 'false' ?>">👍 <?= intval($post['like_count']) ?></button>
               <button type="button" class="comment-toggle" data-target="#comments-<?= $post['PostID'] ?>">💬 <?= intval($post['comment_count']) ?></button>
             </div>
             <div class="post-images">
               <?php
                 if (!empty($post['images'])) {
-                  // images may be returned as a GROUP_CONCAT string separated by '||' or as an array (API responses)
-                  if (is_array($post['images'])) {
-                    $imgs = $post['images'];
-                  } else {
-                    $imgs = explode('||', $post['images']);
-                  }
+                  $imgs = explode('||', $post['images']);
                   foreach ($imgs as $img) {
                     $img = trim($img);
                     if ($img === '') continue;
-                    // ensure safe output
-                    $src = htmlspecialchars($img);
-                    echo "<img src=\"{$src}\" class=\"post-image\" alt=\"post image\">";
+                    echo '<img src="' . htmlspecialchars($img) . '" class="post-image" alt="post image">';
                   }
                 }
               ?>
@@ -136,7 +121,7 @@ $posts = mysqli_query($conn, $postsSql);
     </section>
   </main>
 
-  <script>window.isLoggedIn = <?= $sessUid ? 'true' : 'false' ?>;</script>
-  <script src="assets/js/communities.js?v=20251019"></script>
+  <script>window.isLoggedIn = <?= $sessUidInt ? 'true' : 'false' ?>;</script>
+  <script src="assets/js/communities.js?v=20251020a"></script>
 </body>
 </html>

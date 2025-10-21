@@ -6,19 +6,13 @@ header('Pragma: no-cache');
 
 session_start();
 require_once __DIR__ . '/../../src/db.php';
+require_once __DIR__ . '/../../src/api_helpers.php';
 
-// Check authentication
-$userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
-if (!$userId) {
-  http_response_code(401);
-  echo json_encode(['ok' => false, 'error' => 'Not authenticated']);
-  exit;
-}
+// Only admins can create events
+requireAdmin($conn);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-  http_response_code(405);
-  echo json_encode(['ok' => false, 'error' => 'Method not allowed']);
-  exit;
+    jsonResponse(405, ['ok' => false, 'error' => 'Method not allowed']);
 }
 
 $name = trim($_POST['name'] ?? '');
@@ -26,39 +20,19 @@ $address = trim($_POST['address'] ?? '');
 $date = trim($_POST['date'] ?? '');
 $organizer = trim($_POST['organizer'] ?? '');
 
-// Debug: Log what we're receiving
-error_log("Event Post - Name: $name, Address: $address, Date: $date, Organizer: $organizer");
-
 if ($name === '' || $address === '' || $date === '' || $organizer === '') {
-  http_response_code(400);
-  echo json_encode(['ok' => false, 'error' => 'All fields are required']);
-  exit;
+    jsonResponse(400, ['ok' => false, 'error' => 'All fields are required']);
 }
 
-if (!isset($conn)) {
-  http_response_code(500);
-  echo json_encode(['ok' => false, 'error' => 'DB not available']);
-  exit;
-}
-
-// Insert event (no UserID needed since only admins can create events)
+// Insert event
 $sql = "INSERT INTO events (Name, Address, Date, Organizer) VALUES (?, ?, ?, ?)";
 $stmt = mysqli_prepare($conn, $sql);
 mysqli_stmt_bind_param($stmt, 'ssss', $name, $address, $date, $organizer);
-
-// Debug: Log the SQL and values
-error_log("SQL: $sql");
-error_log("Values - Name: '$name', Address: '$address', Date: '$date', Organizer: '$organizer'");
-
 $ok = mysqli_stmt_execute($stmt);
-
-// Debug: Check for SQL errors
-if (!$ok) {
-  error_log("SQL Error: " . mysqli_error($conn));
-}
 
 if ($ok) {
     $id = mysqli_insert_id($conn);
+    mysqli_stmt_close($stmt);
     $saved = [];
     // Ensure we have an event_images table like trading uses for images
     // Create if missing (safe for dev/local; in production this should be a migration)
@@ -117,8 +91,6 @@ if ($ok) {
 
   echo json_encode(['ok' => true, 'id' => (int)$id, 'images' => $saved]);
 } else {
-  http_response_code(500);
-  echo json_encode(['ok' => false, 'error' => 'Insert failed']);
+  jsonResponse(500, ['ok' => false, 'error' => 'Insert failed']);
 }
-mysqli_stmt_close($stmt);
-?>
+

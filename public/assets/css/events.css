@@ -1,3 +1,19 @@
+:root {
+  /* Dark Palette Colors */
+  --bg-darkest: #0a1014;
+  --bg-dark-teal: #072227;
+  --bg-medium: #192e3c;
+  --accent-orange: #e07800;
+  --accent-light-orange: #e08828;
+
+  /* Legacy variables */
+  --primary-color: #072227; /* Background color (dark teal) */
+  --hover-color: #192e3c;
+  --accent-color: #e07800;
+  --text-color: #c9c9c9;
+  --card-bg: #0a1014; /* Card background (darkest) */
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -15,7 +31,99 @@
 
 .events-page p {
   margin-bottom: 20px;
-  color: #666;
+  color: #b0b0b0;
+}
+
+/* Events controls (filters and actions) */
+.events-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.events-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  background: rgba(224, 120, 0, 0.2);
+  border: 1px solid rgba(224, 120, 0, 0.3);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-btn:hover {
+  background: rgba(224, 120, 0, 0.4);
+  border-color: rgba(224, 120, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+.filter-btn.active {
+  background: rgba(224, 120, 0, 0.6);
+  border-color: var(--accent-orange);
+  font-weight: 600;
+}
+
+.filter-btn span {
+  font-size: 0.75rem;
+}
+
+.events-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 10px 20px;
+  background: var(--accent-orange);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: var(--accent-light-orange);
+  box-shadow: 0 2px 8px rgba(224, 120, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.action-btn.secondary {
+  background: rgba(224, 120, 0, 0.3);
+  border: 1px solid rgba(224, 120, 0, 0.4);
+}
+
+.action-btn.secondary:hover {
+  background: rgba(224, 120, 0, 0.5);
+  border-color: rgba(224, 120, 0, 0.6);
+}
+
+@media (max-width: 768px) {
+  .events-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .events-filters,
+  .events-actions {
+    justify-content: center;
+  }
 }
 
 .events-grid {
@@ -106,8 +214,8 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background: #2a2a3e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-darkest);
+  border: 1px solid rgba(224, 120, 0, 0.2);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   min-width: 140px;
@@ -153,14 +261,14 @@
 
 /* Event cards */
 .event-card {
-  background: #23233a;
+  background: var(--bg-darkest);
   color: #fff;
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  border: 4px solid #29294a;
+  border: 2px solid rgba(224, 120, 0, 0.1);
 }
 
 .event-card img {
@@ -184,16 +292,17 @@
 .join-btn {
   margin-top: 10px;
   padding: 10px 15px;
-  background-color: #4cafef;
+  background-color: var(--accent-orange);
   border: none;
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .join-btn:hover {
-  background-color: #3498db;
+  background-color: var(--accent-light-orange);
+  box-shadow: 0 2px 8px rgba(224, 120, 0, 0.3);
 }
 
 /* Leave state is red */
@@ -219,14 +328,15 @@
 }
 
 .event-popup-content {
-  background: #fff;
-  color: #222;
+  background: var(--bg-darkest);
+  color: #fff;
   border-radius: 10px;
   padding: 50px 20px 20px;
   max-width: 700px;
   width: 90%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   position: relative;
+  border: 2px solid rgba(224, 120, 0, 0.2);
 }
 
 /* Compact modal variant shares the same class, width overridden inline */
@@ -253,15 +363,17 @@
 #event-popup-action-btn {
   margin-top: 15px;
   padding: 10px 15px;
-  background-color: #4cafef;
+  background-color: var(--accent-orange);
   border: none;
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 #event-popup-action-btn:hover {
-  background-color: #3498db;
+  background-color: var(--accent-light-orange);
+  box-shadow: 0 2px 8px rgba(224, 120, 0, 0.3);
 }
 
 /* Popup leave variant */
@@ -282,5 +394,5 @@
   font-weight: bold;
 }
 .event-popup-close:hover {
-  color: #c04f87;
+  color: var(--accent-orange);
 }

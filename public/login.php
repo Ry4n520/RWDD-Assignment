@@ -2,66 +2,65 @@
 <?php
 // public/login.php
 session_start();
-include __DIR__ . '/../src/db.php'; // adjust if your db.php path differs
+include __DIR__ . '/../src/db.php';
 
 // ===== Signup =====
 if (isset($_POST['signup'])) {
-    $newuser = $_POST['newuser'];
-    $newemail = $_POST['newemail'];
+    $newuser = trim($_POST['newuser']);
+    $newemail = trim($_POST['newemail']);
     $newpass = $_POST['newpass'];
 
-    $check = "SELECT * FROM accounts WHERE username='$newuser'";
-    $res = mysqli_query($conn, $check);
+    // Check if username exists using prepared statement
+    $checkStmt = mysqli_prepare($conn, "SELECT username FROM accounts WHERE username = ? LIMIT 1");
+    mysqli_stmt_bind_param($checkStmt, "s", $newuser);
+    mysqli_stmt_execute($checkStmt);
+    mysqli_stmt_store_result($checkStmt);
 
-    if (mysqli_num_rows($res) > 0) {
+    if (mysqli_stmt_num_rows($checkStmt) > 0) {
         $signup_error = "Username already taken!";
-        $showSignup = true; // 👈 Force signup form to show
+        $showSignup = true;
     } else {
-    // escape inputs before building the INSERT to avoid syntax errors
-    $newuser_e = mysqli_real_escape_string($conn, $newuser);
-    $newemail_e = mysqli_real_escape_string($conn, $newemail);
-    $newpass_e = mysqli_real_escape_string($conn, $newpass);
+        // Insert new user using prepared statement
+        $insertStmt = mysqli_prepare($conn, "INSERT INTO accounts (username, email, password) VALUES (?, ?, ?)");
+        mysqli_stmt_bind_param($insertStmt, "sss", $newuser, $newemail, $newpass);
 
-    // note: some schemas do not have a `date_joined` column. Let the DB default
-    // timestamp handle creation time (or add the column). Insert only the
-    // fields we are sure exist.
-    $insertSql = "INSERT INTO accounts (username, email, password) 
-            VALUES ('$newuser_e', '$newemail_e', '$newpass_e')";
-
-    if (mysqli_query($conn, $insertSql)) {
-      $signup_success = "Account created! You can login now.";
-      $showSignup = false; // 👈 Back to login form
-    } else {
-      $signup_error = "Something went wrong: " . mysqli_error($conn);
-      $showSignup = true; 
+        if (mysqli_stmt_execute($insertStmt)) {
+            $signup_success = "Account created! You can login now.";
+            $showSignup = false;
+        } else {
+            $signup_error = "Something went wrong. Please try again.";
+            $showSignup = true;
+        }
+        mysqli_stmt_close($insertStmt);
     }
-    }
+    mysqli_stmt_close($checkStmt);
 }
 
 // ===== Login =====
 if (isset($_POST['login'])) {
-    $user = $_POST['username'] ?? '';
+    $user = trim($_POST['username'] ?? '');
     $pass = $_POST['password'] ?? '';
 
-    $loginSql = "SELECT * FROM accounts WHERE username='$user' AND password='$pass' LIMIT 1";
-    $loginRes = mysqli_query($conn, $loginSql);
+    // Use prepared statement for login
+    $loginStmt = mysqli_prepare($conn, "SELECT UserID, username FROM accounts WHERE username = ? AND password = ? LIMIT 1");
+    mysqli_stmt_bind_param($loginStmt, "ss", $user, $pass);
+    mysqli_stmt_execute($loginStmt);
+    $loginRes = mysqli_stmt_get_result($loginStmt);
 
-  if ($loginRes && mysqli_num_rows($loginRes) === 1) {
-    $row = mysqli_fetch_assoc($loginRes);
-    // set session
-    $_SESSION['loggedin'] = true;
-    $_SESSION['username'] = $row['username'] ?? $row['user'] ?? null;
-    // robustly pick the id column that exists and store it in both keys
-    $uid = $row['UserID'] ?? $row['userid'] ?? $row['id'] ?? $row['user_id'] ?? null;
-    if ($uid !== null) {
-      $_SESSION['user_id'] = $uid;
-      $_SESSION['UserID'] = $uid;
-    }
-    header("Location: home.php");
-    exit;
+    if ($row = mysqli_fetch_assoc($loginRes)) {
+        // Set session
+        $_SESSION['loggedin'] = true;
+        $_SESSION['username'] = $row['username'];
+        $_SESSION['user_id'] = (int)$row['UserID'];
+        $_SESSION['UserID'] = (int)$row['UserID'];
+        
+        mysqli_stmt_close($loginStmt);
+        header("Location: home.php");
+        exit;
     } else {
         $login_error = "Invalid username or password.";
     }
+    mysqli_stmt_close($loginStmt);
 }
 ?>
 <!doctype html>
@@ -70,60 +69,102 @@ if (isset($_POST['login'])) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Login / Signup</title>
-  <link rel="stylesheet" href="assets/css/login.css">
-  <script src="assets/js/login.js" defer></script>
+    <link rel="stylesheet" href="assets/css/login.css?v=20251021c">
+  <script src="assets/js/login.js?v=20251021" defer></script>
 </head>
 <body>
-  <div class="auth-container" id="auth-container">
-
-    <!-- LOGIN -->
-    <div class="form-box login-box">
-      <h2>Login</h2>
-      <?php if (!empty($login_error)) echo "<p style='color:red'>$login_error</p>"; ?>
-      <form method="POST" action="login.php">
-        <div class="input-group">
-          <label>Username</label>
-          <input type="text" name="username" required>
-        </div>
-        <div class="input-group">
-          <label>Password</label>
-          <input type="password" name="password" required>
-        </div>
-        <button type="submit" name="login" class="btn">Login</button>
-      </form>
-      <p class="switch-text">Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
+  <div class="login-container" id="auth-container">
+    
+    <!-- Left Panel - Decorative -->
+    <div class="left-panel">
+      <div class="panel-content">
+        <h1>Text Here</h1>
+        <p>More text here</p>
+      </div>
     </div>
 
-    <!-- SIGNUP -->
-    <div class="form-box signup-box">
-      <h2>Sign Up</h2>
-      <?php if (!empty($signup_error)) echo "<p style='color:red'>$signup_error</p>"; ?>
-      <?php if (!empty($signup_success)) echo "<p style='color:green'>$signup_success</p>"; ?>
-      <form method="POST" action="login.php">
-        <div class="input-group">
-          <label>Username</label>
-          <input type="text" name="newuser" required>
-        </div>
-        <div class="input-group">
-          <label>Email</label>
-          <input type="email" name="newemail" required>
-        </div>
-        <div class="input-group">
-          <label>Password</label>
-          <input type="password" name="newpass" required>
-        </div>
-        <button type="submit" name="signup" class="btn">Sign Up</button>
-      </form>
-      <p class="switch-text">Already have an account? <a href="#" id="show-login">Login</a></p>
-    </div>
+    <!-- Right Panel - Forms -->
+    <div class="right-panel">
+      
+      <!-- LOGIN FORM -->
+      <div class="form-wrapper login-form<?= (isset($showSignup) && $showSignup) ? ' hidden' : '' ?>">
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Enter your email and password to access your account.</p>
+        
+        <?php if (!empty($login_error)) echo "<p class='error-msg'>$login_error</p>"; ?>
+        
+        <form method="POST" action="login.php">
+          <div class="input-group">
+            <label>Email</label>
+            <input type="text" name="username" placeholder="Enter your email here..." required>
+          </div>
+          
+          <div class="input-group">
+            <label>Password</label>
+            <div class="password-wrapper">
+              <input type="password" name="password" placeholder="Enter your password here..." required id="login-password">
+              <button type="button" class="toggle-password" data-target="login-password">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-options">
+            <label class="checkbox-label">
+              <input type="checkbox" name="remember">
+              <span>Remember Me</span>
+            </label>
+            <a href="#" class="forgot-link">Forgot Password</a>
+          </div>
+          
+          <button type="submit" name="login" class="btn-primary">Login</button>
+          
+          <p class="switch-text">or sign up <a href="#" id="show-signup">here</a></p>
+        </form>
+      </div>
 
+      <!-- SIGNUP FORM -->
+      <div class="form-wrapper signup-form<?= (isset($showSignup) && $showSignup) ? '' : ' hidden' ?>">
+        <h2>Create Account</h2>
+        <p class="subtitle">Sign up to get started with your account.</p>
+        
+        <?php if (!empty($signup_error)) echo "<p class='error-msg'>$signup_error</p>"; ?>
+        <?php if (!empty($signup_success)) echo "<p class='success-msg'>$signup_success</p>"; ?>
+        
+        <form method="POST" action="login.php">
+          <div class="input-group">
+            <label>Username</label>
+            <input type="text" name="newuser" placeholder="Enter your username..." required>
+          </div>
+          
+          <div class="input-group">
+            <label>Email</label>
+            <input type="email" name="newemail" placeholder="Enter your email..." required>
+          </div>
+          
+          <div class="input-group">
+            <label>Password</label>
+            <div class="password-wrapper">
+              <input type="password" name="newpass" placeholder="Enter your password..." required id="signup-password">
+              <button type="button" class="toggle-password" data-target="signup-password">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <button type="submit" name="signup" class="btn-primary">Sign Up</button>
+          
+          <p class="switch-text">Already have an account? <a href="#" id="show-login">Login</a></p>
+        </form>
+      </div>
+
+    </div>
   </div>
-<?php if (isset($showSignup) && $showSignup): ?>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("auth-container").classList.add("show-signup");
-  });
-</script>
-<?php endif; ?>
 </body>
 </html>

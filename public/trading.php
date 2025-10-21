@@ -1,9 +1,8 @@
 <?php
-include '../src/auth.php';
+/* include '../src/auth.php'; */
 include __DIR__ . '/../src/db.php';
 
-$currentUserId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
-$currentUserId = $currentUserId ? (int)$currentUserId : 0;
+$currentUserId = (int)($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
 
 // Check if user is admin
 $isAdmin = false;
@@ -18,20 +17,25 @@ if ($currentUserId) {
 }
 
 // Fetch trading items with owner info and first image (if any)
+// Hide items where current user has an accepted trade request
 $sql = "SELECT t.ItemID, t.Name AS ItemName, t.Category, t.Description, t.DateAdded, t.UserID AS OwnerID, a.username,
     (SELECT path FROM trading_images ti WHERE ti.ItemID = t.ItemID ORDER BY ti.id ASC LIMIT 1) AS ImagePath,
     t.MeetupLocation,
     EXISTS(SELECT 1 FROM tradingrequests tr WHERE tr.ItemID = t.ItemID AND tr.SenderID = ? AND tr.Status = 'Pending') AS Requested
   FROM tradinglist t
   JOIN accounts a ON t.UserID = a.UserID
+  WHERE NOT EXISTS(
+    SELECT 1 FROM tradingrequests tr 
+    WHERE tr.ItemID = t.ItemID 
+    AND tr.SenderID = ? 
+    AND tr.Status = 'Accepted'
+  )
   ORDER BY t.DateAdded DESC";
 $result = null;
-if (isset($conn)) {
-  if ($stmt = mysqli_prepare($conn, $sql)) {
-    mysqli_stmt_bind_param($stmt, 'i', $currentUserId);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-  }
+if ($stmt = mysqli_prepare($conn, $sql)) {
+  mysqli_stmt_bind_param($stmt, 'ii', $currentUserId, $currentUserId);
+  mysqli_stmt_execute($stmt);
+  $result = mysqli_stmt_get_result($stmt);
 }
 
 // Preset meetup locations (replace with DB table later if needed)
@@ -43,11 +47,11 @@ $meetupLocations = ['Community Center', 'City Park', 'Main Street Cafe', 'Librar
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trading</title>
-    <link rel="stylesheet" href="assets/css/navbar.css?v=20251020e" />
-    <link rel="stylesheet" href="assets/css/theme.css?v=20251020c" />
-    <link rel="stylesheet" href="assets/css/trading.css?v=20251020p" />
+    <link rel="stylesheet" href="assets/css/navbar.css" />
+    <link rel="stylesheet" href="assets/css/theme.css" />
+    <link rel="stylesheet" href="assets/css/trading.css" />
     <script src="assets/js/navbar.js?v=20251020" defer></script>
-    <script src="assets/js/trading.js?v=20251020q" defer></script>
+    <script src="assets/js/trading.js?v=20251020s" defer></script>
   </head>
   <body>
     <?php include 'includes/header.php'; ?>
@@ -103,9 +107,8 @@ $meetupLocations = ['Community Center', 'City Park', 'Main Street Cafe', 'Librar
                   <?php endif; ?>
                 </div>
                 <p>Owner: <?= htmlspecialchars($row['username']) ?></p>
-                <?php $requested = !empty($row['Requested']); ?>
-                <button class="request-btn" <?= $requested ? 'disabled' : '' ?>>
-                  <?= $requested ? 'Request sent' : 'I want this' ?>
+                <button class="request-btn" <?= !empty($row['Requested']) ? 'disabled' : '' ?>>
+                  <?= !empty($row['Requested']) ? 'Request sent' : 'I want this' ?>
                 </button>
               </div>
             </div>
@@ -118,30 +121,18 @@ $meetupLocations = ['Community Center', 'City Park', 'Main Street Cafe', 'Librar
 
   <!-- View popup -->
     <div id="trading-popup" class="trading-popup">
-      <div class="trading-popup-content" style="display:flex;flex-direction:row;padding:0;max-width:900px;height:400px;overflow:hidden;border-radius:10px 10px 10px 10px">
-        <span class="trading-popup-close" style="position:absolute;top:10px;right:18px;font-size:2rem;cursor:pointer;z-index:10;color:#888">&times;</span>
+      <div class="trading-popup-content">
+        <span class="trading-popup-close">&times;</span>
         
-        <!-- Left side: Image with navigation arrows -->
-        <div style="position:relative;width:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;border-radius:10px 0 0 10px;overflow:hidden">
-          <button id="popup-prev-img" style="position:absolute;left:10px;background:rgba(255,255,255,0.8);border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.5rem;display:none">&lt;</button>
-          <img id="trading-popup-img" src="" alt="Item Image" style="width:100%;height:100%;object-fit:cover;margin:0;border-radius:0" />
-          <button id="popup-next-img" style="position:absolute;right:10px;background:rgba(255,255,255,0.8);border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.5rem;display:none">&gt;</button>
+        <img id="trading-popup-img" src="" alt="Item Image" />
+        <h2 id="trading-popup-title"></h2>
+        <div class="popup-meta">
+          <p id="trading-popup-owner"></p>
+          <p id="trading-popup-time"></p>
         </div>
+        <p id="trading-popup-content"></p>
         
-        <!-- Right side: Details -->
-        <div style="width:50%;background:#90ee90;padding:20px;display:flex;flex-direction:column;position:relative;border-radius:0 10px 10px 0">
-          <h2 id="trading-popup-title" style="margin:0 0 10px;font-size:1.8rem;color:#222"></h2>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
-            <p id="trading-popup-owner" style="margin:0;font-size:0.9rem;color:#333;font-weight:500"></p>
-            <p id="trading-popup-time" style="margin:0;font-size:0.85rem;color:#333"></p>
-          </div>
-          <p id="trading-popup-content" style="color:#222;font-size:0.95rem;margin:0;line-height:1.5;flex:1;overflow-y:auto"></p>
-          
-          <!-- Buttons at bottom right -->
-          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px">
-            <button id="trading-popup-action-btn" class="request-btn" style="margin:0;padding:10px 20px;background:rgba(0,0,0,0.2);border-radius:8px;color:#000">Request</button>
-          </div>
-        </div>
+        <button id="trading-popup-action-btn">Request</button>
       </div>
     </div>
 
@@ -209,6 +200,5 @@ $meetupLocations = ['Community Center', 'City Park', 'Main Street Cafe', 'Librar
     </div>
   </div>
 
-    <script src="assets/js/trading.js?v=20251020q"></script>
   </body>
 </html>

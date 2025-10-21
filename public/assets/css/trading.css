@@ -1,13 +1,12 @@
+/* Trading page uses theme variables from theme.css */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Request button is hidden by default; shown when popup opens via JS */
-.trading-popup-content #trading-popup-action-btn {
-  display: none;
-}
+/* Action button styling is now defined at the bottom of the file */
 .trading-page {
   padding: 20px;
 }
@@ -15,11 +14,12 @@
 .trading-page h1 {
   font-size: 2rem;
   margin-bottom: 10px;
+  color: var(--text-color);
 }
 
 .trading-page p {
   margin-bottom: 20px;
-  color: #666; /* match events */
+  color: var(--muted-text);
 }
 
 /* Trading controls (filters and actions) */
@@ -40,10 +40,10 @@
 
 .filter-btn {
   padding: 8px 16px;
-  background: rgba(144, 238, 144, 0.3);
-  border: none;
+  background: rgba(var(--accent-rgb), 0.2);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 20px;
-  color: #222;
+  color: var(--text-color);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -53,12 +53,15 @@
 }
 
 .filter-btn:hover {
-  background: rgba(144, 238, 144, 0.5);
+  background: rgba(var(--accent-rgb), 0.3);
+  border-color: rgba(var(--accent-rgb), 0.5);
   transform: translateY(-1px);
 }
 
 .filter-btn.active {
-  background: rgba(144, 238, 144, 0.7);
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
   font-weight: 600;
 }
 
@@ -74,27 +77,31 @@
 
 .action-btn {
   padding: 10px 20px;
-  background: rgba(144, 238, 144, 0.6);
+  background: var(--accent-color);
   border: none;
   border-radius: 20px;
-  color: #222;
+  color: #fff;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.2);
 }
 
 .action-btn:hover {
-  background: rgba(144, 238, 144, 0.8);
+  background: var(--hover-color);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
 }
 
 .action-btn.secondary {
-  background: rgba(144, 238, 144, 0.4);
+  background: rgba(var(--accent-rgb), 0.3);
+  border: 1px solid rgba(var(--accent-rgb), 0.5);
 }
 
 .action-btn.secondary:hover {
-  background: rgba(144, 238, 144, 0.6);
+  background: rgba(var(--accent-rgb), 0.5);
+  border-color: var(--accent-color);
 }
 
 @media (max-width: 768px) {
@@ -121,14 +128,21 @@
 }
 
 .trading-card {
-  background: #23233a; /* match events */
-  color: #fff;
+  background: var(--card-bg);
+  color: var(--text-color);
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  border: 4px solid #29294a; /* same as events subtle border */
+  border: 1px solid var(--card-border);
+  transition: all 0.3s ease;
+}
+
+.trading-card:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 28px rgba(var(--accent-rgb), 0.15);
+  transform: translateY(-2px);
 }
 
 .trading-card img {
@@ -168,7 +182,7 @@
 .trading-edit-btn,
 .trading-delete-btn {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--card-border);
   width: 36px;
   height: 36px;
   display: inline-flex;
@@ -180,12 +194,12 @@
 }
 
 .trading-edit-btn {
-  color: #82b1ff;
+  color: var(--accent-color);
 }
 
 .trading-edit-btn:hover {
-  background: rgba(130, 177, 255, 0.1);
-  border-color: rgba(130, 177, 255, 0.3);
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: rgba(var(--accent-rgb), 0.3);
 }
 
 .trading-delete-btn {
@@ -216,20 +230,21 @@
 }
 
 .trading-menu-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(var(--accent-rgb), 0.1);
 }
 
 .trading-menu-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  background: #2a2a3e;
+  background: var(--card-bg);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   min-width: 120px;
   z-index: 100;
   overflow: hidden;
   margin-top: 4px;
+  border: 1px solid var(--card-border);
 }
 
 .trading-menu-dropdown[aria-hidden='true'] {
@@ -254,7 +269,7 @@
 }
 
 .trading-menu-dropdown .menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(var(--accent-rgb), 0.1);
 }
 
 .trading-menu-dropdown .menu-item.delete-trading {
@@ -268,37 +283,45 @@
 .trading-details h2 {
   font-size: 1.3rem;
   margin-bottom: 0.5em;
+  color: var(--text-color);
 }
 
 .trading-details p {
   margin: 4px 0;
+  color: var(--text-color);
 }
 
 .request-btn {
   margin-top: 10px;
   padding: 10px 15px;
-  background-color: #4cafef; /* match events */
+  background-color: var(--accent-color);
   border: none;
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.2);
 }
 
 .request-btn:hover {
-  background-color: #3498db; /* match events hover */
+  background-color: var(--hover-color);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+}
+
+.request-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Popup styles */
 .trading-popup {
-  /* Hidden by default; JS sets inline display or toggles class on open */
   position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  display: none;
+  display: none; /* stays hidden until JS shows it */
   align-items: center;
   justify-content: center;
   z-index: 1000;
@@ -307,23 +330,18 @@
   display: flex !important;
 }
 .trading-popup-content {
-  /* Modal card styling */
-  background: #fff !important;
-  color: #222;
+  background: var(--card-bg);
+  color: var(--text-color);
   border-radius: 10px;
-  padding: 50px 20px 20px 20px;
+  padding: 50px 20px 20px;
   max-width: 700px;
   width: 90%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   position: relative;
+  border: 2px solid var(--card-border);
 }
 
-.trading-popup-content .popup-info {
-  text-align: left;
-  margin-left: auto;
-  margin-right: auto;
-  width: 80%; /* or your preferred width */
-}
+/* Popup info styling removed - using direct content styling now */
 
 .trading-popup-content img {
   width: 95%;
@@ -331,9 +349,20 @@
   object-fit: cover;
   border-radius: 8px;
   display: block;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 20px;
+  margin: 0 auto 20px;
+}
+
+.trading-popup-content .popup-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.trading-popup-content .popup-meta p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted-text);
 }
 .trading-popup-close {
   position: absolute;
@@ -345,5 +374,31 @@
   font-weight: bold;
 }
 .trading-popup-close:hover {
-  color: #c04f87;
+  color: var(--accent-color);
+}
+
+.trading-popup-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.trading-popup-content p {
+  margin: 6px 0;
+  font-size: 1rem;
+}
+
+#trading-popup-action-btn {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: var(--accent-color);
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#trading-popup-action-btn:hover {
+  background-color: var(--hover-color);
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.3);
 }

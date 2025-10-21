@@ -7,41 +7,54 @@ session_start();
 header('Content-Type: application/json');
 
 require __DIR__ . '/../../src/db.php';
+require __DIR__ . '/../../src/api_helpers.php';
 
-function respond_json(int $code, array $data): void {
-  http_response_code($code);
-  echo json_encode($data);
-  exit;
+$me = requireAuth();
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    jsonResponse(405, ['ok' => false, 'error' => 'method_not_allowed']);
 }
-
-$me = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
-if (!$me) respond_json(401, ['ok' => false, 'error' => 'not_authenticated']);
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') respond_json(405, ['ok' => false, 'error' => 'method_not_allowed']);
 
 $requestId = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
 $resp = strtolower(trim($_POST['response'] ?? ''));
+
 if ($requestId <= 0 || !in_array($resp, ['accept','decline'], true)) {
-  respond_json(400, ['ok' => false, 'error' => 'invalid_params']);
+    jsonResponse(400, ['ok' => false, 'error' => 'invalid_params']);
 }
 
 // Load the request and ensure current user is the Receiver
 $q = mysqli_prepare($conn, 'SELECT ItemID, SenderID, ReceiverID FROM tradingrequests WHERE RequestID = ?');
-if (!$q) respond_json(500, ['ok' => false, 'error' => 'prep_failed', 'detail' => mysqli_error($conn)]);
+if (!$q) {
+    jsonResponse(500, ['ok' => false, 'error' => 'prep_failed', 'detail' => mysqli_error($conn)]);
+}
+
 mysqli_stmt_bind_param($q, 'i', $requestId);
 mysqli_stmt_execute($q);
 mysqli_stmt_bind_result($q, $itemId, $senderId, $receiverId);
 $found = mysqli_stmt_fetch($q);
 mysqli_stmt_close($q);
-if (!$found) respond_json(404, ['ok' => false, 'error' => 'request_not_found']);
-if ((int)$receiverId !== (int)$me) respond_json(403, ['ok' => false, 'error' => 'forbidden']);
+
+if (!$found) {
+    jsonResponse(404, ['ok' => false, 'error' => 'request_not_found']);
+}
+
+if ((int)$receiverId !== (int)$me) {
+    jsonResponse(403, ['ok' => false, 'error' => 'forbidden']);
+}
 
 $newStatus = $resp === 'accept' ? 'Accepted' : 'Rejected';
 $u = mysqli_prepare($conn, "UPDATE tradingrequests SET Status = ? WHERE RequestID = ?");
-if (!$u) respond_json(500, ['ok' => false, 'error' => 'prep_failed', 'detail' => mysqli_error($conn)]);
+if (!$u) {
+    jsonResponse(500, ['ok' => false, 'error' => 'prep_failed', 'detail' => mysqli_error($conn)]);
+}
+
 mysqli_stmt_bind_param($u, 'si', $newStatus, $requestId);
 $ok = mysqli_stmt_execute($u);
 mysqli_stmt_close($u);
-if (!$ok) respond_json(500, ['ok' => false, 'error' => 'update_failed', 'detail' => mysqli_error($conn)]);
+
+if (!$ok) {
+    jsonResponse(500, ['ok' => false, 'error' => 'update_failed', 'detail' => mysqli_error($conn)]);
+}
 
 // Create a notification for the sender
 $conn->query("CREATE TABLE IF NOT EXISTS notifications (
@@ -55,29 +68,32 @@ $conn->query("CREATE TABLE IF NOT EXISTS notifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
 
 // Load item details for nicer payload
-$itemName = null; $itemMeetup = null;
-if ($stmt = mysqli_prepare($conn, 'SELECT Name, MeetupLocation FROM tradinglist WHERE ItemID = ?')) {
-  mysqli_stmt_bind_param($stmt, 'i', $itemId);
-  mysqli_stmt_execute($stmt);
-  mysqli_stmt_bind_result($stmt, $itemName, $itemMeetup);
-  mysqli_stmt_fetch($stmt);
-  mysqli_stmt_close($stmt);
+$itemName = null;
+$itemMeetup = null;
+$stmt = mysqli_prepare($conn, 'SELECT Name, MeetupLocation FROM tradinglist WHERE ItemID = ?');
+if ($stmt) {
+    mysqli_stmt_bind_param($stmt, 'i', $itemId);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $itemName, $itemMeetup);
+    mysqli_stmt_fetch($stmt);
+    mysqli_stmt_close($stmt);
 }
 
 $payload = json_encode([
-  'kind' => $newStatus === 'Accepted' ? 'trading_accepted' : 'trading_declined',
-  'request_id' => $requestId,
-  'item_id' => (int)$itemId,
-  'item_name' => $itemName,
-  'meetup_location' => $itemMeetup,
+    'kind' => $newStatus === 'Accepted' ? 'trading_accepted' : 'trading_declined',
+    'request_id' => $requestId,
+    'item_id' => (int)$itemId,
+    'item_name' => $itemName,
+    'meetup_location' => $itemMeetup,
 ], JSON_UNESCAPED_UNICODE);
 
 $type = $newStatus === 'Accepted' ? 'trading_accepted' : 'trading_declined';
 $p = mysqli_prepare($conn, 'INSERT INTO notifications (user_id, type, payload) VALUES (?, ?, ?)');
 if ($p) {
-  mysqli_stmt_bind_param($p, 'iss', $senderId, $type, $payload);
-  mysqli_stmt_execute($p);
-  mysqli_stmt_close($p);
+    mysqli_stmt_bind_param($p, 'iss', $senderId, $type, $payload);
+    mysqli_stmt_execute($p);
+    mysqli_stmt_close($p);
 }
 
-respond_json(200, ['ok' => true, 'status' => $newStatus]);
+jsonResponse(200, ['ok' => true, 'status' => $newStatus]);
+

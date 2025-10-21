@@ -15,10 +15,13 @@ function safe_query($conn, $sql){
 
 $out['posts_describe'] = safe_query($conn, 'DESCRIBE posts');
 $out['accounts_describe'] = safe_query($conn, 'DESCRIBE accounts');
+$out['comments_describe'] = safe_query($conn, 'DESCRIBE comments');
 $out['posts_count'] = safe_query($conn, 'SELECT COUNT(*) AS cnt FROM posts');
 $out['accounts_count'] = safe_query($conn, 'SELECT COUNT(*) AS cnt FROM accounts');
+$out['comments_count'] = safe_query($conn, 'SELECT COUNT(*) AS cnt FROM comments');
 // sample rows
 $out['posts_sample'] = safe_query($conn, 'SELECT * FROM posts ORDER BY PostID DESC LIMIT 5');
 $out['accounts_sample'] = safe_query($conn, 'SELECT * FROM accounts ORDER BY UserID DESC LIMIT 5');
+$out['comments_sample'] = safe_query($conn, 'SELECT * FROM comments ORDER BY CommentID DESC LIMIT 5');
 
 echo json_encode($out, JSON_PRETTY_PRINT);

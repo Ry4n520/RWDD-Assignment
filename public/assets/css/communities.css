@@ -1,3 +1,12 @@
+/* CSS Variables for Dark Palette */
+:root {
+  --bg-darkest: #0a1014;
+  --bg-dark-teal: #072227;
+  --bg-medium: #192e3c;
+  --accent-orange: #e07800;
+  --accent-light-orange: #e08828;
+}
+
 .communities-page {
   padding: 20px;
   max-width: 800px;
@@ -21,8 +30,9 @@
   gap: 12px;
   padding: 14px;
   border-radius: 10px;
-  background: linear-gradient(180deg, #ffffff, #f3f6fb);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--bg-darkest);
+  border: 2px solid rgba(224, 120, 0, 0.1);
+  color: #fff;
 }
 
 /* top row: avatar + fields */
@@ -55,8 +65,9 @@
   width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #dfe7f5;
-  background: #fff;
+  border: 1px solid rgba(224, 120, 0, 0.3);
+  background: var(--bg-medium);
+  color: #fff;
   font-size: 15px;
 }
 
@@ -67,9 +78,9 @@
   min-height: 90px;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #dfe7f5;
-  background: #fff;
-  color: #111;
+  border: 1px solid rgba(224, 120, 0, 0.3);
+  background: var(--bg-medium);
+  color: #fff;
   font-size: 14px;
   line-height: 1.1;
   resize: vertical; /* allow vertical resize if user needs more space */
@@ -95,7 +106,7 @@
 /* Post button */
 #postButton {
   padding: 8px 14px;
-  background: #0071ff;
+  background: var(--accent-orange);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -103,9 +114,11 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   position: relative;
   z-index: 1;
+  transition: all 0.2s ease;
 }
 #postButton:hover {
-  background: #005fd6;
+  background: var(--accent-light-orange);
+  box-shadow: 0 2px 8px rgba(224, 120, 0, 0.3);
 }
 
 /* small inline preview thumbnails */
@@ -164,15 +177,15 @@
   font-size: 14px;
 }
 .composer-message.error {
-  background: #ffecec;
-  color: #8b0d0d;
-  border: 1px solid #f5c6c6;
+  background: rgba(220, 53, 69, 0.1);
+  color: #ff6b6b;
+  border: 1px solid rgba(220, 53, 69, 0.3);
   display: block;
 }
 .composer-message.success {
-  background: #e9ffec;
-  color: #0b6f2b;
-  border: 1px solid #c6f5d1;
+  background: rgba(224, 120, 0, 0.1);
+  color: var(--accent-light-orange);
+  border: 1px solid rgba(224, 120, 0, 0.3);
   display: block;
 }
 
@@ -220,6 +233,7 @@ h1 {
   font-size: 2rem;
   margin-bottom: 20px;
   text-align: center;
+  color: var(--accent-light-orange);
 }
 
 .new-post textarea {
@@ -227,21 +241,25 @@ h1 {
   min-height: 80px;
   padding: 10px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(224, 120, 0, 0.3);
+  background: var(--bg-medium);
+  color: #fff;
   margin-bottom: 10px;
   resize: vertical;
 }
 
 .new-post button {
   padding: 8px 16px;
-  background: #4cafef;
+  background: var(--accent-orange);
   border: none;
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 .new-post button:hover {
-  background: #3498db;
+  background: var(--accent-light-orange);
+  box-shadow: 0 2px 8px rgba(224, 120, 0, 0.3);
 }
 
 .posts {
@@ -252,12 +270,12 @@ h1 {
 }
 
 .post {
-  background: #252536; /* was #1e1e2f - now a bit lighter */
+  background: var(--bg-darkest);
   color: #fff;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  border: 2px solid rgba(224, 120, 0, 0.1);
 }
 
 .post-header {
@@ -300,8 +318,8 @@ h1 {
   position: absolute;
   top: 100%;
   right: 0;
-  background: #2a2a3e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-darkest);
+  border: 1px solid rgba(224, 120, 0, 0.2);
   border-radius: 8px;
   min-width: 120px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -434,17 +452,19 @@ h1 {
   padding: 6px 10px;
   border: none;
   border-radius: 8px;
-  background: #0f1720; /* deep dark */
+  background: var(--bg-medium);
   color: #e6eef8;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 0.95rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) inset;
+  border: 1px solid rgba(224, 120, 0, 0.2);
+  transition: all 0.2s ease;
 }
 .post-actions button:hover {
-  background: #19202a;
+  background: rgba(224, 120, 0, 0.1);
+  border-color: rgba(224, 120, 0, 0.3);
 }
 /* liked state: filled heart / accent color */
 .post-actions .like-btn.liked {
@@ -458,13 +478,15 @@ h1 {
 }
 
 .post-actions .comment-toggle {
-  background: #0f1720;
+  background: var(--bg-medium);
   color: #dbe7f5;
   padding: 6px 10px;
   border-radius: 8px;
+  border: 1px solid rgba(224, 120, 0, 0.2);
 }
 .post-actions .comment-toggle:hover {
-  background: #19202a;
+  background: rgba(224, 120, 0, 0.1);
+  border-color: rgba(224, 120, 0, 0.3);
 }
 
 .comments {
@@ -491,16 +513,20 @@ h1 {
   flex: 1;
   padding: 8px;
   border-radius: 5px;
-  border: 1px solid #aaa;
+  border: 1px solid rgba(224, 120, 0, 0.3);
+  background: var(--bg-medium);
+  color: #fff;
 }
 .add-comment button {
   padding: 6px 12px;
-  background: #4cafef;
+  background: var(--accent-orange);
   border: none;
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 .add-comment button:hover {
-  background: #3498db;
+  background: var(--accent-light-orange);
+  box-shadow: 0 2px 8px rgba(224, 120, 0, 0.3);
 }

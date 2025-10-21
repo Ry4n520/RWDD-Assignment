@@ -1,10 +1,9 @@
 <?php
-include '../src/auth.php';
+/* include '../src/auth.php'; */
 // load session and DB, then fetch current user to populate profile fields
 include __DIR__ . '/../src/db.php';
 
-$userId = $_SESSION['user_id'] ?? $_SESSION['UserID'] ?? null;
-$userId = $userId ? (int)$userId : 0;
+$userId = (int)($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
 
 // Check if user is admin
 $isAdmin = false;
@@ -26,122 +25,61 @@ $user = [
   'profile_picture' => 'assets/images/default-profile.jpg'
 ];
 
-if (isset($conn)) {
-  $row = null;
-  if ($userId) {
-    $stmt = mysqli_prepare($conn, "SELECT * FROM accounts WHERE UserID = ? LIMIT 1");
-    if ($stmt) {
-      mysqli_stmt_bind_param($stmt, 'i', $userId);
-      mysqli_stmt_execute($stmt);
-      $res = mysqli_stmt_get_result($stmt);
-      $row = $res ? mysqli_fetch_assoc($res) : null;
-      mysqli_stmt_close($stmt);
-    }
-  }
-  if (!$row) {
-    $res2 = mysqli_query($conn, "SELECT * FROM accounts LIMIT 1");
-    $row = $res2 ? mysqli_fetch_assoc($res2) : null;
-  }
-  if (!empty($row)) {
-    $user['username'] = $row['username'] ?? $row['user_name'] ?? $user['username'];
-    $user['bio'] = $row['bio'] ?? $row['about'] ?? $user['bio'];
-    $user['email'] = $row['email'] ?? $user['email'];
-    $user['phone'] = $row['phone'] ?? $row['contact'] ?? $user['phone'];
-    $pp = $row['profile_picture'] ?? $row['avatar'] ?? $row['picture'] ?? null;
-    if (!empty($pp)) {
-      $user['profile_picture'] = $pp;
-    }
-    // determine the profile account id
-    $profileAccountId = null;
-    if (isset($row['UserID'])) $profileAccountId = intval($row['UserID']);
-    elseif (isset($row['user_id'])) $profileAccountId = intval($row['user_id']);
-    elseif (isset($row['id'])) $profileAccountId = intval($row['id']);
-    elseif (isset($row['ID'])) $profileAccountId = intval($row['ID']);
-    else $profileAccountId = $userId ? intval($userId) : null;
+$row = null;
+if ($userId) {
+  $stmt = mysqli_prepare($conn, "SELECT * FROM accounts WHERE UserID = ? LIMIT 1");
+  if ($stmt) {
+    mysqli_stmt_bind_param($stmt, 'i', $userId);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $row = $res ? mysqli_fetch_assoc($res) : null;
+    mysqli_stmt_close($stmt);
   }
 }
 
-// helper: find a column name in a table from a list of candidates
-function find_column($conn, $table, $candidates) {
-  $desc = @mysqli_query($conn, "DESCRIBE `" . $table . "`");
-  if (!$desc) return null;
-  $cols = [];
-  while ($r = mysqli_fetch_assoc($desc)) $cols[] = $r['Field'];
-  foreach ($candidates as $c) {
-    if (in_array($c, $cols, true)) return $c;
+if (!empty($row)) {
+  $user['username'] = $row['username'] ?? $user['username'];
+  $user['bio'] = $row['bio'] ?? $user['bio'];
+  $user['email'] = $row['email'] ?? $user['email'];
+  $user['phone'] = $row['phone'] ?? $user['phone'];
+  if (!empty($row['profile_picture'])) {
+    $user['profile_picture'] = $row['profile_picture'];
   }
-  return null;
 }
 
-// Fetch posts for this account (if we have an id)
+// Fetch posts for this user
 $profilePosts = [];
-if (!empty($profileAccountId) && isset($conn)) {
-  $userCol = find_column($conn, 'posts', ['UserID','user_id','userid']);
-  $postIdCol = find_column($conn, 'posts', ['PostID','post_id','id']);
-  $contentCol = find_column($conn, 'posts', ['Content','content','Body','body']);
-  $createdCol = find_column($conn, 'posts', ['Created_at','created_at','CreatedAt','createdAt','created']);
-  if ($userCol && $postIdCol) {
-    $contentSel = $contentCol ? "p.`$contentCol` AS Content" : "'' AS Content";
-    $createdSel = $createdCol ? "p.`$createdCol` AS Created_at" : "NOW() AS Created_at";
-    $sql = "SELECT p.`$postIdCol` AS PostID, $contentSel, $createdSel, p.`$userCol` AS UserID FROM posts p WHERE p.`$userCol` = ? ORDER BY " . ($createdCol ? "p.`$createdCol` DESC" : "p.`$postIdCol` DESC");
-    if ($stmt = mysqli_prepare($conn, $sql)) {
-      mysqli_stmt_bind_param($stmt, 'i', $profileAccountId);
-      mysqli_stmt_execute($stmt);
-      $res = mysqli_stmt_get_result($stmt);
-      while ($r = mysqli_fetch_assoc($res)) {
-        // load images for post
-        $imgs = [];
-        $imgStmt = mysqli_prepare($conn, "SELECT path FROM post_images WHERE PostID = ? ORDER BY id ASC");
-        if ($imgStmt) {
-          mysqli_stmt_bind_param($imgStmt, 'i', $r['PostID']);
-          mysqli_stmt_execute($imgStmt);
-          $ir = mysqli_stmt_get_result($imgStmt);
-          while ($im = mysqli_fetch_assoc($ir)) {
-            $imgs[] = ltrim($im['path'], '/');
-          }
+if ($userId) {
+  $sql = "SELECT p.PostID, p.Content, p.Created_at, p.UserID 
+          FROM posts p 
+          WHERE p.UserID = ? 
+          ORDER BY p.Created_at DESC";
+  if ($stmt = mysqli_prepare($conn, $sql)) {
+    mysqli_stmt_bind_param($stmt, 'i', $userId);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    while ($r = mysqli_fetch_assoc($res)) {
+      // load images for post
+      $imgs = [];
+      $imgStmt = mysqli_prepare($conn, "SELECT path FROM post_images WHERE PostID = ? ORDER BY id ASC");
+      if ($imgStmt) {
+        mysqli_stmt_bind_param($imgStmt, 'i', $r['PostID']);
+        mysqli_stmt_execute($imgStmt);
+        $ir = mysqli_stmt_get_result($imgStmt);
+        while ($im = mysqli_fetch_assoc($ir)) {
+          $imgs[] = ltrim($im['path'], '/');
         }
-        if (!empty($imgs)) $r['images'] = $imgs;
-        $profilePosts[] = $r;
+        mysqli_stmt_close($imgStmt);
       }
-      mysqli_stmt_close($stmt);
+      if (!empty($imgs)) $r['images'] = $imgs;
+      $profilePosts[] = $r;
     }
+    mysqli_stmt_close($stmt);
   }
 }
 
-// Fetch comments authored by this account
-$profileComments = [];
-if (!empty($profileAccountId) && isset($conn)) {
-  $commentsUserCol = find_column($conn, 'comments', ['UserID','user_id','userid']);
-  $commentsIdCol = find_column($conn, 'comments', ['CommentID','comment_id','id']);
-  $commentsContentCol = find_column($conn, 'comments', ['Content','content','Body','body','Comment','comment']);
-  $commentsCreatedCol = find_column($conn, 'comments', ['Created_at','created_at','CreatedAt','createdAt','created']);
-  $commentsPostCol = find_column($conn, 'comments', ['PostID','post_id','postId','postid']);
-  if ($commentsUserCol && $commentsIdCol && $commentsPostCol) {
-    $contentSel = $commentsContentCol ? "c.`$commentsContentCol` AS Content" : "'' AS Content";
-    $createdSel = $commentsCreatedCol ? "c.`$commentsCreatedCol` AS Created_at" : "NOW() AS Created_at";
-    $sql = "SELECT c.`$commentsIdCol` AS CommentID, $contentSel, $createdSel, c.`$commentsPostCol` AS PostID FROM comments c WHERE c.`$commentsUserCol` = ? ORDER BY " . ($commentsCreatedCol ? "c.`$commentsCreatedCol` DESC" : "c.`$commentsIdCol` DESC");
-    if ($stmt = mysqli_prepare($conn, $sql)) {
-      mysqli_stmt_bind_param($stmt, 'i', $profileAccountId);
-      mysqli_stmt_execute($stmt);
-      $res = mysqli_stmt_get_result($stmt);
-      while ($r = mysqli_fetch_assoc($res)) {
-        // fetch short info about the post this comment was on (title or content excerpt)
-        $postInfo = null;
-        $pstmt = mysqli_prepare($conn, "SELECT PostID, Content, Title FROM posts WHERE PostID = ? LIMIT 1");
-        if ($pstmt) {
-          mysqli_stmt_bind_param($pstmt, 'i', $r['PostID']);
-          mysqli_stmt_execute($pstmt);
-          $pr = mysqli_stmt_get_result($pstmt);
-          $postInfo = $pr ? mysqli_fetch_assoc($pr) : null;
-          mysqli_stmt_close($pstmt);
-        }
-        $r['post_info'] = $postInfo;
-        $profileComments[] = $r;
-      }
-      mysqli_stmt_close($stmt);
-    }
-  }
-}
+// Comments section has been replaced with notifications
+// (Removed unused $profileComments code)
 
 ?>
 

@@ -48,6 +48,16 @@ if ($ownerId === (int)$me) {
   respond(400, ['ok' => false, 'error' => 'cannot_request_own_item']);
 }
 
+// Fetch sender's username
+$senderUsername = null;
+if ($stmt = mysqli_prepare($conn, 'SELECT username FROM accounts WHERE UserID = ?')) {
+  mysqli_stmt_bind_param($stmt, 'i', $me);
+  mysqli_stmt_execute($stmt);
+  mysqli_stmt_bind_result($stmt, $senderUsername);
+  mysqli_stmt_fetch($stmt);
+  mysqli_stmt_close($stmt);
+}
+
 // Ensure table exists (without MeetupLocation; it's now in tradinglist)
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS tradingrequests (
   RequestID INT AUTO_INCREMENT PRIMARY KEY,
@@ -91,6 +101,7 @@ $payload = json_encode([
   'item_name' => $itemName,
   'meetup_location' => $itemMeetup,
   'from_user' => (int)$me,
+  'from_username' => $senderUsername,
   'note' => $note,
 ], JSON_UNESCAPED_UNICODE);
 
