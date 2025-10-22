@@ -1,5 +1,5 @@
 <?php
-/* include '../src/auth.php'; */
+include '../src/auth.php';
 // load session and DB, then fetch current user to populate profile fields
 include __DIR__ . '/../src/db.php';
 

@@ -1,4 +1,4 @@
-<?php /* include '../src/auth.php'; */
+<?php include '../src/auth.php';
 // Dynamic homepage: fetch latest trading item, event, and community post
 include __DIR__ . '/../src/db.php';
 

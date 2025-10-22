@@ -61,7 +61,7 @@
 .filter-btn.active {
   background: var(--accent-color);
   border-color: var(--accent-color);
-  color: #fff;
+  color: var(--button-text-color);
   font-weight: 600;
 }
 
@@ -80,7 +80,7 @@
   background: var(--accent-color);
   border: none;
   border-radius: 20px;
-  color: #fff;
+  color: var(--button-text-color);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -194,12 +194,12 @@
 }
 
 .trading-edit-btn {
-  color: var(--accent-color);
+  color: #1976d2;
 }
 
 .trading-edit-btn:hover {
-  background: rgba(var(--accent-rgb), 0.1);
-  border-color: rgba(var(--accent-rgb), 0.3);
+  background: rgba(25, 118, 210, 0.1);
+  border-color: rgba(25, 118, 210, 0.3);
 }
 
 .trading-delete-btn {
@@ -297,7 +297,7 @@
   background-color: var(--accent-color);
   border: none;
   border-radius: 5px;
-  color: #fff;
+  color: var(--button-text-color);
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.2);
@@ -393,7 +393,7 @@
   background-color: var(--accent-color);
   border: none;
   border-radius: 5px;
-  color: #fff;
+  color: var(--button-text-color);
   cursor: pointer;
   transition: all 0.2s ease;
 }

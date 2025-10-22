@@ -78,8 +78,8 @@ if (isset($_POST['login'])) {
     <!-- Left Panel - Decorative -->
     <div class="left-panel">
       <div class="panel-content">
-        <h1>Text Here</h1>
-        <p>More text here</p>
+        <h1>Link Mosaic</h1>
+        <p>Log in to discover events, share ideas, and stay connected with those around you. </p>
       </div>
     </div>
 

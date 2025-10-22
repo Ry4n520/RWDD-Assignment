@@ -1,5 +1,5 @@
 <?php
-/* include '../src/auth.php'; */
+include '../src/auth.php';
 include __DIR__ . '/../src/db.php';
 
 $currentUserId = (int)($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);

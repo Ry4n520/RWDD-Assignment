@@ -1,16 +1,12 @@
 :root {
-  /* Default (dark) theme variables - Updated to match new palette */
-  --bg-darkest: #0a1014;
-  --bg-dark-teal: #072227;
-  --bg-medium: #192e3c;
-  --accent-orange: #e07800;
-  --accent-light-orange: #e08828;
-
+  /* Default (dark) theme variables */
   --primary-color: #072227; /* Background color (dark teal) */
   --hover-color: #192e3c;
   --accent-color: #e07800;
+  --accent-hover: #e08828;
   --accent-rgb: 224, 120, 0;
   --text-color: #c9c9c9;
+  --button-text-color: #ffffff;
   --card-bg: #0a1014; /* Card background (darkest) */
   --card-border: rgba(224, 120, 0, 0.2);
   --muted-text: #a7b6c2;
@@ -18,17 +14,13 @@
 
 /* Dark theme explicit */
 :root[data-theme='dark'] {
-  --bg-darkest: #0a1014;
-  --bg-dark-teal: #072227;
-  --bg-medium: #192e3c;
-  --accent-orange: #e07800;
-  --accent-light-orange: #e08828;
-
   --primary-color: #072227; /* Background color (dark teal) */
   --hover-color: #192e3c;
   --accent-color: #e07800;
+  --accent-hover: #e08828;
   --accent-rgb: 224, 120, 0;
   --text-color: #cfd8dc;
+  --button-text-color: #ffffff;
   --card-bg: #0a1014; /* Card background (darkest) */
   --card-border: rgba(224, 120, 0, 0.2);
   --muted-text: #a7b6c2;
@@ -36,20 +28,16 @@
 
 /* Light theme - Green Palette */
 :root[data-theme='light'] {
-  --bg-lightest: #b8f0d0; /* Even lighter background for better contrast */
-  --bg-light-green: #7ed2a1;
-  --bg-medium-green: #71c494;
-  --bg-dark-green: #6cbc8d;
-  --bg-darkest-green: #569972;
-
   --primary-color: #b8f0d0; /* Background color (lighter) */
   --hover-color: #7ed2a1;
   --accent-color: #569972; /* Darkest for buttons */
+  --accent-hover: #6cbc8d;
   --accent-rgb: 86, 153, 114;
-  --text-color: #1a1a1a; /* Dark text for better visibility on light background */
-  --card-bg: #6cbc8d; /* Use darker green from palette for boxes */
+  --text-color: #1a1a1a; /* Dark text for better visibility */
+  --button-text-color: #1a1a1a; /* Black button text */
+  --card-bg: #6cbc8d; /* Darker green for boxes */
   --card-border: rgba(86, 153, 114, 0.3);
-  --muted-text: #2d4a3a; /* Darker muted text for readability */
+  --muted-text: #2d4a3a; /* Darker muted text */
 }
 
 /* Optional: transition for smooth theme change */

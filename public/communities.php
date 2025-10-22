@@ -1,5 +1,5 @@
 <?php
-/* include '../src/auth.php'; */
+include '../src/auth.php';
 // Simplified communities.php - show posts and comment counts; no auth checks
 include __DIR__ . '/../src/db.php';
 

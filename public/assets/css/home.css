@@ -41,7 +41,7 @@ main p {
 
 .admin-content h1 {
   margin-bottom: 20px;
-  color: var(--accent-light-orange);
+  color: var(--text-color);
 }
 
 .admin-subtitle {
@@ -56,20 +56,21 @@ main p {
 .accounts-table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--bg-darkest);
+  background: var(--hover-color);
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .accounts-table thead tr {
-  background: var(--bg-medium);
-  color: var(--accent-light-orange);
+  background: var(--card-bg);
+  color: var(--text-color);
 }
 
 .accounts-table th {
   padding: 12px;
   text-align: left;
-  border-bottom: 2px solid var(--accent-orange);
+  border-bottom: 2px solid var(--accent-color);
 }
 
 .accounts-table th:last-child {
@@ -77,12 +78,12 @@ main p {
 }
 
 .accounts-table tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.1);
   transition: background 0.2s;
 }
 
 .accounts-table tbody tr:hover {
-  background: rgba(var(--accent-rgb), 0.1);
+  background: rgba(var(--accent-rgb), 0.15);
 }
 
 .accounts-table td {
