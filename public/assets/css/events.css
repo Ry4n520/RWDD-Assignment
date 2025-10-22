@@ -319,6 +319,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
 .event-popup-content {
   background: var(--card-bg);
   color: var(--text-color);
@@ -394,6 +395,7 @@
 }
 .event-popup-close:hover {
   color: var(--accent-color);
-}event-popup-close:hover {
+}
+.event-popup-close:hover {
   color: var(--accent-orange);
 }
