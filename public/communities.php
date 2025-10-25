@@ -39,10 +39,10 @@ $posts = mysqli_stmt_get_result($stmt);
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Communities</title>
-  <link rel="stylesheet" href="assets/css/navbar.css?v=20251020c">
-  <link rel="stylesheet" href="assets/css/theme.css?v=20251018">
-  <link rel="stylesheet" href="assets/css/communities.css?v=20251020">
-  <script src="assets/js/navbar.js?v=20251020" defer></script>
+  <link rel="stylesheet" href="assets/css/navbar.css?">
+  <link rel="stylesheet" href="assets/css/theme.css?">
+  <link rel="stylesheet" href="assets/css/communities.css?">
+  <script src="assets/js/navbar.js?" defer></script>
 </head>
 <body>
   <?php include 'includes/header.php'; ?>
@@ -122,6 +122,8 @@ $posts = mysqli_stmt_get_result($stmt);
   </main>
 
   <script>window.isLoggedIn = <?= $sessUidInt ? 'true' : 'false' ?>;</script>
-  <script src="assets/js/communities.js?v=20251020a"></script>
+  <script>window.currentUserId = <?= $sessUidInt ?>;</script>
+  <script>window.isAdmin = <?= $isAdmin ? 'true' : 'false' ?>;</script>
+  <script src="assets/js/communities.js?" defer></script>
 </body>
 </html>

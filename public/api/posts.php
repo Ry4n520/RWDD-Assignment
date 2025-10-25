@@ -349,7 +349,7 @@ if ($post && empty($post['username'])) {
 }
 
 echo json_encode(['success' => true, 'post' => $post]);
-
+exit;
 
 // helper: resize an image file to fit within max dimensions using GD
 if (!function_exists('resize_image')) {

@@ -329,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Prevent double submissions and ensure proper async flow
   form?.addEventListener('submit', async (ev) => {
     ev.preventDefault();
+    console.log('Form submitted');
     if (!postButton) return;
 
     // prevent double-clicks/submissions
@@ -337,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     postButton.disabled = true;
 
     const contentVal = content.value.trim();
+    console.log('Content:', contentVal);
 
     // require content
     if (!contentVal) {
@@ -366,19 +368,18 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         json = JSON.parse(text);
       } catch (e) {
-        alert('Save failed: HTTP ' + res.status + '\n' + text);
         console.error('Unexpected non-json response from api/posts.php:', text);
         return;
       }
 
-      if (!json.success) {
-        showMessage('Save failed: ' + (json.error || 'unknown'), 'error');
+      // Check if there's an explicit error
+      if (json.success === false) {
         console.error('API error response:', json);
         return;
       }
 
       // render new post or reload if builder not present
-      if (typeof buildPostHtml === 'function') {
+      if (json.post && typeof buildPostHtml === 'function') {
         const postHtml = buildPostHtml(json.post, json.commentCount || 0);
         const postsContainer = document.querySelector('.posts');
         if (postsContainer) {
@@ -399,7 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
       selectedFiles = [];
       preview.innerHTML = '';
       preview.setAttribute('aria-hidden', 'true');
-      showMessage('Post created', 'success');
     } catch (err) {
       console.error('Fetch error posting:', err);
       showMessage(

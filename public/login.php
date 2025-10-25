@@ -89,14 +89,14 @@ if (isset($_POST['login'])) {
       <!-- LOGIN FORM -->
       <div class="form-wrapper login-form<?= (isset($showSignup) && $showSignup) ? ' hidden' : '' ?>">
         <h2>Welcome Back</h2>
-        <p class="subtitle">Enter your email and password to access your account.</p>
+        <p class="subtitle">Enter your username and password to access your account.</p>
         
         <?php if (!empty($login_error)) echo "<p class='error-msg'>$login_error</p>"; ?>
         
         <form method="POST" action="login.php">
           <div class="input-group">
-            <label>Email</label>
-            <input type="text" name="username" placeholder="Enter your email here..." required>
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter your username here..." required>
           </div>
           
           <div class="input-group">
